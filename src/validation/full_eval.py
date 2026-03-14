@@ -302,21 +302,6 @@ def plot_hypersphere_geometry_figure(metrics, reps, dataset_name, figure_dir):
         ax.set_title(component.capitalize(), fontsize=11)
     save_figure(fig, os.path.join(figure_dir, "hypersphere_geometry_eval.png"), use_tight_layout=False)
 
-def plot_effective_dimension_figure(metrics, figure_dir):
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.5), sharey=True)
-    for ax, dataset_name, title in zip(axes, ("val", "eval"), ("GlueDegradDB val split", "GlueDegradDB-Eval")):
-        if f"effective_dim/{dataset_name}/latentglue_target" not in metrics:
-            ax.axis("off")
-            continue
-        series_map = {
-            "Frozen mean": [metrics[f"effective_dim/{dataset_name}/{component_baseline_prefix(component)}_{component}"] for component in COMPONENT_NAMES],
-            "Projected mean": [metrics[f"effective_dim/{dataset_name}/projected_mean_{component}"] for component in COMPONENT_NAMES],
-            "LatentGlue": [metrics[f"effective_dim/{dataset_name}/latentglue_{component}"] for component in COMPONENT_NAMES],
-        }
-        plot_grouped_bars(ax, COMPONENT_NAMES, series_map, title, "Spectral effective dimension")
-    axes[0].legend(loc="upper right")
-    save_figure(fig, os.path.join(figure_dir, "effective_dimension_bars.png"))
-
 def plot_uniformity_figure(metrics, figure_dir):
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.5), sharey=True)
     for ax, dataset_name, title in zip(axes, ("val", "eval"), ("GlueDegradDB val split", "GlueDegradDB-Eval")):

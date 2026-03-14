@@ -10,6 +10,21 @@
 
 </div>
 
+<div align="center">
+  <table style="border: none;">
+    <tr>
+      <td width="50%" valign="top" style="border: none;">
+        <img src="data/results/full_eval_figures/activity_prediction_scatter_latentglue.png" width="100%" />
+      </td>
+      <td width="50%" valign="top" style="border: none;">
+        <img src="data/results/full_eval_figures/hypersphere_geometry_eval.png" width="100%" />
+        <br>
+        <img src="data/results/full_eval_figures/uniformity_bars.png" width="100%" />
+      </td>
+    </tr>
+  </table>
+</div>
+
 > [!NOTE]
 > **MIT License:**
 > LatentGlue is freely available for **any use** under the MIT License, contributions are always welcome.<br><br>
