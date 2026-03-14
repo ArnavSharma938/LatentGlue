@@ -1,6 +1,10 @@
 .venv
 __pycache__
 .pytest_cache/
+structures/
+details/
+bbb_perm/
+deepmol.log
 
 # Too large
 checkpoint/
