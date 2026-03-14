@@ -1,0 +1,16 @@
+torch==2.3.0
+transformers==4.48.1
+esm==3.2.1.post1
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.6.1
+scipy==1.15.3
+matplotlib
+huggingface_hub
+tqdm
+rdkit==2024.9.4
+requests==2.32.3
+wandb
+httpx
+accelerate>=0.26.0
+pybloom-live
