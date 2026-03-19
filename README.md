@@ -6,7 +6,6 @@
 [![Activity Set](https://img.shields.io/badge/HuggingFace-Activity%20Set-B45309?style=flat)](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Activity)
 [![Open License](https://img.shields.io/badge/Open%20License-MIT-7F1D1D?style=flat)](LICENSE)
 [![Open Weights](https://img.shields.io/badge/HuggingFace-Open%20Weights-4338CA?style=flat)](https://huggingface.co/ArnavSharma938/LatentGlue)
-[![Website](https://img.shields.io/badge/Website-4338CA?style=flat)](https://latent-glue.vercel.app/)
 
 </div>
 
