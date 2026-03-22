@@ -17,6 +17,9 @@ deepmol.log
 .profile
 .hushlogin
 projection_cache
+.dgl
+.keras
+.deepmol_models
 
 # Too large
 checkpoint/

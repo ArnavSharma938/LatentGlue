@@ -69,6 +69,8 @@ The case study applies LatentGlue to large-scale molecular glue screening, with 
 * **Top Ligand for A-Syn (Rank 2)**: COC(C)C(C)n1cc(COc2cccc(C(=O)NC3CCc4ccccc4NC3=O)c2)nn1
 * **Top Ligand for KRAS G12D (Rank 1)**: CNC(=O)C1CC(O)CN1C(=O)CC(NC(=O)c1csnc1C)c1ccc(-c2ccccc2)cc1
 
+High-ranked ligands have extremely strong chemistry fundamentals with major failures requiring minor chemistry edits.
+
 ## Data
 Available datasets include **[GlueDegradDB](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB)**, the training dataset; **[GlueDegradDB-Eval](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Eval)**, an evaluation set (separate from the validation split within GlueDegradDB, which has no component overlap); **[GlueDegradDB-Activity](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Activity)**, degradation profiles; and **[GlueDegradDB-Filter](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Filter)**, a 35M-molecule molecular glue degrader candidate set.
 
