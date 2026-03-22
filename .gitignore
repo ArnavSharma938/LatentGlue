@@ -16,6 +16,7 @@ deepmol.log
 .bash_logout
 .profile
 .hushlogin
+projection_cache
 
 # Too large
 checkpoint/

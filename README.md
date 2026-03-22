@@ -64,7 +64,10 @@ LatentGlue is a 635 million-parameter self-supervised representation learning mo
 
 ## Case Study
 
-The case study applies LatentGlue to large-scale molecular glue screening, with the implementation in `src/casestudy/inference.py`. Starting from 104 million commercially accessible compounds from the [Enamine REAL database](https://enamine.net/compound-collections/real-compounds/real-database-subsets), the pipeline first performs chemistry-based filtering and then uses LatentGlue to screen and rank the top 10,000 candidate ligands for the Alpha-synuclein wild-type and KRAS G12D target contexts.
+The case study applies LatentGlue to large-scale molecular glue screening, with the implementation in `src/casestudy/inference.py`. Starting from 104 million commercially accessible compounds from the [Enamine REAL database](https://enamine.net/compound-collections/real-compounds/real-database-subsets), the pipeline first performs chemistry-based filtering to a set of ~35 million compounds and then uses LatentGlue to screen and rank the top 10,000 candidate ligands for the Alpha-synuclein wild-type and KRAS G12D target contexts. This study is more experimental for now as the screening pipeline does not implement hard chemistry filters.
+
+* **Top Ligand for A-Syn (Rank 2)**: COC(C)C(C)n1cc(COc2cccc(C(=O)NC3CCc4ccccc4NC3=O)c2)nn1
+* **Top Ligand for KRAS G12D (Rank 1)**: CNC(=O)C1CC(O)CN1C(=O)CC(NC(=O)c1csnc1C)c1ccc(-c2ccccc2)cc1
 
 ## Data
 Available datasets include **[GlueDegradDB](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB)**, the training dataset; **[GlueDegradDB-Eval](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Eval)**, an evaluation set (separate from the validation split within GlueDegradDB, which has no component overlap); **[GlueDegradDB-Activity](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Activity)**, degradation profiles; and **[GlueDegradDB-Filter](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Filter)**, a 35M-molecule molecular glue degrader candidate set.
