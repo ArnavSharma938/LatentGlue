@@ -32,8 +32,45 @@
 ## Overview
 LatentGlue is a 635 million-parameter self-supervised representation learning model for molecular glues. It uses frozen ESM-C protein features and frozen MoLFormer-XL ligand features, projects them into a shared 768-dimensional latent space, summarizes each component with seed-attention pooling, and is trained with masked latent reconstruction over target-effector-ligand ternaries in a concatenated complex.
 
-- **Activity prediction:** On `GlueDegradDB-Activity`, LatentGlue achieves `RMSE = 0.575` and `Spearman = 0.468`, compared with `0.664 / 0.358` for the frozen-feature baseline (lower RMSE is better). This corresponds to a 13.4% reduction in RMSE and a 30.6% increase in Spearman relative to the baseline.
-- **Effective dimensionality:** LatentGlue substantially expands the usable dimensionality of protein representations. LatentGlue's effective dimension increases from `300.2` to `528.5` and `212.6` to `499.0` for targets and effectors, respectively.
+**Activity prediction**
+
+| Representation family | RMSE (lower better) | Spearman (higher better) |
+| --- | ---: | ---: |
+| Frozen | 0.665 | 0.364 |
+| Projected | 0.709 | 0.337 |
+| LatentGlue | 0.570 | 0.476 |
+
+**Effective dimensionality on `val`**
+
+| Representation family | Target | Effector | Ligand |
+| --- | ---: | ---: | ---: |
+| Frozen | 195.1 | 204.8 | 640.8 |
+| Projected | 600.2 | 577.9 | 718.4 |
+| LatentGlue | 607.7 | 568.8 | 648.8 |
+
+**Effective dimensionality on `Eval`**
+
+| Representation family | Target | Effector | Ligand |
+| --- | ---: | ---: | ---: |
+| Frozen | 300.1 | 212.5 | 632.7 |
+| Projected | 587.1 | 531.6 | 724.1 |
+| LatentGlue | 528.6 | 498.9 | 658.0 |
+
+**Retrieval on `val`**
+
+| Representation family | Macro context AUROC | Macro context AUPRC |
+| --- | ---: | ---: |
+| Frozen | 0.574 | 0.214 |
+| Projected | 0.592 | 0.188 |
+| LatentGlue | 0.662 | 0.233 |
+
+**Retrieval on `Eval`**
+
+| Representation family | Macro context AUROC | Macro context AUPRC |
+| --- | ---: | ---: |
+| Frozen | 0.589 | 0.162 |
+| Projected | 0.550 | 0.184 |
+| LatentGlue | 0.653 | 0.241 |
 
 **Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/ArnavSharma938/LatentGlue).**
 

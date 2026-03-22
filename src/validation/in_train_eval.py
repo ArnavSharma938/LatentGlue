@@ -1,7 +1,5 @@
 """
-
-Do not interpret any of these metrics as final, these diagnostics
-are purely for debugging. See real, full diagnostics in `full_eval.py`. 
+Debug and evaluation helpers shared by training and full validation.
 
 `train_subset/recon/*`, `val_set/recon/*`, `eval/recon/*`
     Masked reconstruction quality for the three reconstruction rotations.
@@ -88,12 +86,14 @@ def _regression_cv_metrics(features, values, targets, model_factory, n_folds=5):
         predictions = model.predict(features[fold_indices])
         score = spearmanr(values[fold_indices], predictions).statistic
         if score is None or np.isnan(score):
-            score = 0.0
+            raise RuntimeError(
+                "Activity evaluation produced an undefined Spearman correlation for at least one fold."
+            )
         spearman_scores.append(float(score))
         mse = mean_squared_error(values[fold_indices], predictions)
         rmse_scores.append(float(np.sqrt(mse)))
     if not spearman_scores:
-        return {"spearman": 0.0, "rmse": 0.0}
+        raise RuntimeError("Activity evaluation did not produce any valid cross-validation folds.")
     return {
         "spearman": float(np.mean(spearman_scores)),
         "rmse": float(np.mean(rmse_scores)),
@@ -107,6 +107,21 @@ def ridge_cv_metrics(features, values, targets, alpha=1.0, n_folds=5):
         model_factory=lambda: make_pipeline(StandardScaler(), Ridge(alpha=alpha)),
         n_folds=n_folds,
     )
+
+def ridge_cv_predictions(features, values, targets, alpha=1.0, n_folds=5):
+    features = np.asarray(features, dtype=np.float32)
+    values = np.asarray(values, dtype=np.float32)
+    targets = np.asarray(targets)
+    predictions = np.full(len(values), np.nan, dtype=np.float32)
+    for fold_indices in build_target_balanced_folds(targets, values, n_folds=n_folds):
+        train_mask = np.ones(len(values), dtype=bool)
+        train_mask[fold_indices] = False
+        if train_mask.sum() == 0 or fold_indices.size == 0:
+            continue
+        model = make_pipeline(StandardScaler(), Ridge(alpha=alpha))
+        model.fit(features[train_mask], values[train_mask])
+        predictions[fold_indices] = model.predict(features[fold_indices]).astype(np.float32)
+    return predictions
 
 # Log-scaled DC50*
 def activity_targets(activity_df):

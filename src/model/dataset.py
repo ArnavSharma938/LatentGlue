@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 
 class TernaryDataset(torch.utils.data.Dataset):
-    def __init__(self, csv_path=None, split=None, df=None):
+    def __init__(self, csv_path=None, split=None, df=None, dataset_label=None):
         if df is not None:
             self.df = df
         else:
@@ -18,7 +18,10 @@ class TernaryDataset(torch.utils.data.Dataset):
                 self.df = pd.read_csv(csv_path)
                 self.df = self.df[self.df["split"] == "val"].reset_index(drop=True)
 
-        print(f"Split:{split if split else 'ALL'} ({len(self.df)} entries)")
+        if dataset_label:
+            print(f"Dataset:{dataset_label} ({len(self.df)} entries)")
+        else:
+            print(f"Split:{split if split else 'ALL'} ({len(self.df)} entries)")
 
         self.target_seqs = self.df["Target Sequence"].astype(str).tolist()
         self.effector_seqs = self.df["Effector Sequence"].astype(str).tolist()

@@ -1,44 +1,2023 @@
 {
-  "activity/baseline_rmse": 0.7053190266967146,
-  "activity/baseline_spearman": 0.33662183645827104,
-  "activity/frozen_feature_rmse": 0.6635090602180662,
-  "activity/frozen_feature_spearman": 0.35836356578953726,
-  "activity/latentglue_rmse": 0.5746494830574151,
-  "activity/latentglue_spearman": 0.46786741905267687,
-  "effective_dim/eval/esmc_mean_pool_effector": 212.60826110839844,
-  "effective_dim/eval/esmc_mean_pool_target": 300.2425842285156,
-  "effective_dim/eval/latentglue_effector": 499.0101623535156,
-  "effective_dim/eval/latentglue_ligand": 657.9645385742188,
-  "effective_dim/eval/latentglue_target": 528.4713134765625,
-  "effective_dim/eval/molformer_xl_mean_pool_ligand": 632.6514892578125,
-  "effective_dim/eval/projected_mean_effector": 531.58984375,
-  "effective_dim/eval/projected_mean_ligand": 724.1258544921875,
-  "effective_dim/eval/projected_mean_target": 587.0914916992188,
-  "effective_dim/val/esmc_mean_pool_effector": 205.06051635742188,
-  "effective_dim/val/esmc_mean_pool_target": 195.1321258544922,
-  "effective_dim/val/latentglue_effector": 569.3831176757812,
-  "effective_dim/val/latentglue_ligand": 648.8717041015625,
-  "effective_dim/val/latentglue_target": 607.6272583007812,
-  "effective_dim/val/molformer_xl_mean_pool_ligand": 640.9076538085938,
-  "effective_dim/val/projected_mean_effector": 577.798828125,
-  "effective_dim/val/projected_mean_ligand": 718.3519287109375,
-  "effective_dim/val/projected_mean_target": 600.2698974609375,
-  "uniformity/eval/esmc_mean_pool_effector": -0.08067744970321655,
-  "uniformity/eval/esmc_mean_pool_target": -0.6198269724845886,
-  "uniformity/eval/latentglue_effector": -0.1891806721687317,
-  "uniformity/eval/latentglue_ligand": -1.4579867124557495,
-  "uniformity/eval/latentglue_target": -1.453574538230896,
-  "uniformity/eval/molformer_xl_mean_pool_ligand": -0.7597669959068298,
-  "uniformity/eval/projected_mean_effector": -0.06877563148736954,
-  "uniformity/eval/projected_mean_ligand": -0.6751201152801514,
-  "uniformity/eval/projected_mean_target": -0.5281621813774109,
-  "uniformity/val/esmc_mean_pool_effector": -0.1840481162071228,
-  "uniformity/val/esmc_mean_pool_target": -0.14567217230796814,
-  "uniformity/val/latentglue_effector": -0.2857889235019684,
-  "uniformity/val/latentglue_ligand": -2.0157155990600586,
-  "uniformity/val/latentglue_target": -0.3691025376319885,
-  "uniformity/val/molformer_xl_mean_pool_ligand": -1.044201374053955,
-  "uniformity/val/projected_mean_effector": -0.12025398015975952,
-  "uniformity/val/projected_mean_ligand": -0.7807242274284363,
-  "uniformity/val/projected_mean_target": -0.11875727772712708
+  "activity/baseline_rmse": 0.7085704660798868,
+  "activity/baseline_spearman": 0.3371480675583779,
+  "activity/frozen_feature_rmse": 0.6648736071625952,
+  "activity/frozen_feature_spearman": 0.3642942753470912,
+  "activity/latentglue_rmse": 0.5695198585845669,
+  "activity/latentglue_spearman": 0.47569848354116057,
+  "activity_cv": {
+    "error_bar": "sample standard deviation across folds",
+    "n_folds": 5.0,
+    "representations": {
+      "baseline": {
+        "display_name": "Projected",
+        "n_folds": 5.0,
+        "rmse": 0.7085704660798868,
+        "rmse_folds": [
+          0.725522147618126,
+          0.6147065093102762,
+          0.6213083915977536,
+          0.7736832969890955,
+          0.807631984884183
+        ],
+        "rmse_std": 0.0877002477645874,
+        "spearman": 0.3371480675583779,
+        "spearman_folds": [
+          0.24803422756706753,
+          0.5926975227246168,
+          0.3167206290471785,
+          0.20456188034335138,
+          0.3237260781096753
+        ],
+        "spearman_std": 0.1511814445257187
+      },
+      "frozen_feature": {
+        "display_name": "Frozen",
+        "n_folds": 5.0,
+        "rmse": 0.6648736071625952,
+        "rmse_folds": [
+          0.722823376274825,
+          0.6479426184564572,
+          0.5713258389104203,
+          0.7055641675867383,
+          0.6767120345845352
+        ],
+        "rmse_std": 0.05956485494971275,
+        "spearman": 0.3642942753470912,
+        "spearman_folds": [
+          0.20721554116558744,
+          0.6295279121476567,
+          0.35800185013876046,
+          0.2587956405926627,
+          0.3679304326907889
+        ],
+        "spearman_std": 0.16294585168361664
+      },
+      "latentglue": {
+        "display_name": "LatentGlue",
+        "n_folds": 5.0,
+        "rmse": 0.5695198585845669,
+        "rmse_folds": [
+          0.5220937418933972,
+          0.466746467198966,
+          0.6648347067301958,
+          0.6646176205781962,
+          0.5293067565220793
+        ],
+        "rmse_std": 0.09021805971860886,
+        "spearman": 0.47569848354116057,
+        "spearman_folds": [
+          0.4052960222016652,
+          0.5887658641990805,
+          0.42784458834412586,
+          0.4080830275475901,
+          0.5485029154133407
+        ],
+        "spearman_std": 0.08646252006292343
+      }
+    },
+    "split_strategy": "target-balanced 5-fold cross-validation on GlueDegradDB-Activity"
+  },
+  "effective_dim/eval/esmc_mean_pool_effector": 212.5146026611328,
+  "effective_dim/eval/esmc_mean_pool_target": 300.1289367675781,
+  "effective_dim/eval/latentglue_effector": 498.8562316894531,
+  "effective_dim/eval/latentglue_ligand": 657.96923828125,
+  "effective_dim/eval/latentglue_target": 528.5698852539062,
+  "effective_dim/eval/molformer_xl_mean_pool_ligand": 632.65478515625,
+  "effective_dim/eval/projected_mean_effector": 531.6019897460938,
+  "effective_dim/eval/projected_mean_ligand": 724.126220703125,
+  "effective_dim/eval/projected_mean_target": 587.0761108398438,
+  "effective_dim/val/esmc_mean_pool_effector": 204.80419921875,
+  "effective_dim/val/esmc_mean_pool_target": 195.10690307617188,
+  "effective_dim/val/latentglue_effector": 568.8441162109375,
+  "effective_dim/val/latentglue_ligand": 648.7637329101562,
+  "effective_dim/val/latentglue_target": 607.737060546875,
+  "effective_dim/val/molformer_xl_mean_pool_ligand": 640.8367309570312,
+  "effective_dim/val/projected_mean_effector": 577.9481811523438,
+  "effective_dim/val/projected_mean_ligand": 718.3512573242188,
+  "effective_dim/val/projected_mean_target": 600.2149658203125,
+  "ligand_attention": {
+    "attention_bin_counts": {
+      "balanced": {
+        "large": 42.0,
+        "medium": 57.0,
+        "small": 41.0
+      },
+      "diffuse": {
+        "large": 43.0,
+        "medium": 38.0,
+        "small": 60.0
+      },
+      "focused": {
+        "large": 56.0,
+        "medium": 45.0,
+        "small": 40.0
+      }
+    },
+    "dataset_name": "GlueDegradDB-Eval",
+    "figure_path": "data/results/ligand_attention.png",
+    "num_eval_rows": 430.0,
+    "num_unique_ligands": 422.0,
+    "occupied_bin_count": 9.0,
+    "representative_panel_count": 9.0,
+    "representative_panels": [
+      {
+        "atom_count": 29.0,
+        "compound_id": "1081",
+        "effective_atom_fraction": 0.03634797981000777,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "focused",
+        "normalized_entropy": 0.01564435678758266,
+        "participation_ratio": 1.0179027723341751,
+        "size_bin": "small",
+        "smiles": "O=C1CCC(N2Cc3cc(NC4=NOC5C=C(F)C=CC45)ccc3C2=O)C(=O)N1",
+        "targets": [
+          "CK1\u03b1"
+        ],
+        "top1_atom_weight": 0.9911305904388428,
+        "top3_atom_weight": 0.9998825192451477
+      },
+      {
+        "atom_count": 39.0,
+        "compound_id": "1113",
+        "effective_atom_fraction": 0.026214322320102647,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "focused",
+        "normalized_entropy": 0.00603573356446504,
+        "participation_ratio": 1.0061704435704995,
+        "size_bin": "medium",
+        "smiles": "O=C1CCC(N2Cc3c(OCc4ccc(CN5CCN(c6ccccc6)CC5)cc4)cccc3C2=O)C(=O)N1",
+        "targets": [
+          "IKZF3"
+        ],
+        "top1_atom_weight": 0.9969250559806824,
+        "top3_atom_weight": 0.9998525977134705
+      },
+      {
+        "atom_count": 57.0,
+        "compound_id": "1544",
+        "effective_atom_fraction": 0.017818163077087158,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "focused",
+        "normalized_entropy": 0.0038372809198106666,
+        "participation_ratio": 1.0039517862805236,
+        "size_bin": "large",
+        "smiles": "CC(C)(c1ccc(OCC(O)CCl)cc1)c1ccc(OCC2CCN(C(=O)CCCCCCOc3ccc4c(c3)C(=O)N(C3CCC(=O)NC3=O)C4=O)CC2)cc1",
+        "targets": [
+          "GSPT1"
+        ],
+        "top1_atom_weight": 0.9980286359786987,
+        "top3_atom_weight": 0.9999281167984009
+      },
+      {
+        "atom_count": 30.0,
+        "compound_id": "1072",
+        "effective_atom_fraction": 0.056690741262468904,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "balanced",
+        "normalized_entropy": 0.15613707381766043,
+        "participation_ratio": 1.4638947405435512,
+        "size_bin": "small",
+        "smiles": "O=C1CCC(N2Cc3cc(NC(=O)c4cc5ccccn5n4)ccc3C2=O)C(=O)N1",
+        "targets": [
+          "CK1\u03b1"
+        ],
+        "top1_atom_weight": 0.8053819537162781,
+        "top3_atom_weight": 0.9997922778129578
+      },
+      {
+        "atom_count": 35.0,
+        "compound_id": "231",
+        "effective_atom_fraction": 0.050834158623837424,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "balanced",
+        "normalized_entropy": 0.1620548297981571,
+        "participation_ratio": 1.5627129584652693,
+        "size_bin": "medium",
+        "smiles": "CC1(C)CCN(Cc2ccc(COc3cccc4c3CN(C3CCC(=O)NC3=O)C4=O)cc2)CC1",
+        "targets": [
+          "IKZF3"
+        ],
+        "top1_atom_weight": 0.7676375508308411,
+        "top3_atom_weight": 0.9997969269752502
+      },
+      {
+        "atom_count": 58.0,
+        "compound_id": "571",
+        "effective_atom_fraction": 0.03382597994795105,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "balanced",
+        "normalized_entropy": 0.16597126829896836,
+        "participation_ratio": 1.5702111282987392,
+        "size_bin": "large",
+        "smiles": "CN1CCN(C2CCCN(c3cnc(C(N)=O)c(Nc4ccc(C5CCN(CCCNc6cccc7c6C(=O)N(C6CCC(=O)NC6=O)C7=O)CC5)cc4)n3)C2)C1=O",
+        "targets": [
+          "IKZF3"
+        ],
+        "top1_atom_weight": 0.7748081088066101,
+        "top3_atom_weight": 0.9851952791213989
+      },
+      {
+        "atom_count": 24.0,
+        "compound_id": "405",
+        "effective_atom_fraction": 0.12089602329045969,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "diffuse",
+        "normalized_entropy": 0.3351829367147407,
+        "participation_ratio": 2.628927102233188,
+        "size_bin": "small",
+        "smiles": "Cc1nc2c(C)cccc2cc1C(=O)NN=Cc1ccccc1Cl",
+        "targets": [
+          "GSPT1"
+        ],
+        "top1_atom_weight": 0.5127320289611816,
+        "top3_atom_weight": 0.9937611818313599
+      },
+      {
+        "atom_count": 34.0,
+        "compound_id": "1327",
+        "effective_atom_fraction": 0.0862570290348417,
+        "effectors": [
+          "CRBN"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "diffuse",
+        "normalized_entropy": 0.3051125336647533,
+        "participation_ratio": 2.6429259556262905,
+        "size_bin": "medium",
+        "smiles": "Cc1ccc(CC(=NN)C(=O)NCc2ccc3c(c2)CN(C2CCC(=O)NC2=O)C3=O)cc1Cl",
+        "targets": [
+          "GSPT1"
+        ],
+        "top1_atom_weight": 0.513087272644043,
+        "top3_atom_weight": 0.9914637804031372
+      },
+      {
+        "atom_count": 53.0,
+        "compound_id": "497",
+        "effective_atom_fraction": 0.06273486845781141,
+        "effectors": [
+          "RNF126"
+        ],
+        "eval_row_count": 1.0,
+        "focus_bin": "diffuse",
+        "normalized_entropy": 0.30261100935358065,
+        "participation_ratio": 3.1626678419617678,
+        "size_bin": "large",
+        "smiles": "CCOc1ccc(C(=O)C=CC(=O)N2CCN(c3ccc(-n4nnc5c(=O)[nH]c6ccc(-c7ccc(OC)nc7)cc6c54)cc3C(F)(F)F)CC2)cc1",
+        "targets": [
+          "RIOK2"
+        ],
+        "top1_atom_weight": 0.36650198698043823,
+        "top3_atom_weight": 0.9678398370742798
+      }
+    ],
+    "summary": {
+      "atom_count": {
+        "mean": 39.57345962524414,
+        "median": 35.0,
+        "q10": 27.0,
+        "q50": 35.0,
+        "q90": 59.0
+      },
+      "effective_atom_fraction": {
+        "mean": 0.05923108384013176,
+        "median": 0.04644141346216202,
+        "q10": 0.020415248349308968,
+        "q50": 0.04644141346216202,
+        "q90": 0.1166827529668808
+      },
+      "normalized_entropy": {
+        "mean": 0.1680252104997635,
+        "median": 0.15634112060070038,
+        "q10": 0.0038518637884408236,
+        "q50": 0.15634112060070038,
+        "q90": 0.3641194999217987
+      },
+      "participation_ratio": {
+        "mean": 1.7714149951934814,
+        "median": 1.5165355205535889,
+        "q10": 1.0036813020706177,
+        "q50": 1.5165355205535889,
+        "q90": 3.0165748596191406
+      },
+      "top1_atom_weight": {
+        "mean": 0.7579604387283325,
+        "median": 0.7903091907501221,
+        "q10": 0.45680472254753113,
+        "q50": 0.7903091907501221,
+        "q90": 0.9981637001037598
+      },
+      "top3_atom_weight": {
+        "mean": 0.9727979898452759,
+        "median": 0.9975444674491882,
+        "q10": 0.9030536413192749,
+        "q50": 0.9975444674491882,
+        "q90": 0.9999666213989258
+      }
+    }
+  },
+  "retrieval": {
+    "eval": {
+      "config": {
+        "batch_size": 32.0,
+        "n_folds": 5.0,
+        "negatives_per_context": 64.0,
+        "rng_seed": 17.0,
+        "scorer": "LowRankBilinearScorer(rank=64) + BCEWithLogitsLoss + AdamW(lr=0.001, weight_decay=0.0001)",
+        "split_strategy": "grouped context holdout cross-validation on GlueDegradDB-Eval"
+      },
+      "dataset": {
+        "context_negative_count_mean": 64.0,
+        "context_positive_count_mean": 13.030303030303031,
+        "name": "GlueDegradDB-Eval",
+        "num_contexts": 33.0,
+        "num_pairs": 2542.0,
+        "num_rows": 430.0
+      },
+      "folds": {
+        "context_counts": [
+          6.0,
+          7.0,
+          6.0,
+          7.0,
+          7.0
+        ],
+        "pair_counts": [
+          518.0,
+          534.0,
+          469.0,
+          525.0,
+          496.0
+        ]
+      },
+      "representations": {
+        "frozen_mean": {
+          "context_count": 33.0,
+          "macro_context_auprc": 0.16187180268938878,
+          "macro_context_auroc": 0.5886481009294399,
+          "per_context": {
+            "ctx_001_IKZF2_CRBN": {
+              "auprc": 0.3639908129182885,
+              "auroc": 0.6827256944444444,
+              "candidate_count": 82.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 18.0,
+              "target_name": "IKZF2"
+            },
+            "ctx_002_NFKB1_UBE2D": {
+              "auprc": 0.09523809523809523,
+              "auroc": 0.8515625,
+              "candidate_count": 66.0,
+              "effector_name": "UBE2D",
+              "effector_uniprot": "Q7Z6J8",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "NFKB1"
+            },
+            "ctx_003_IKZF3_CRBN": {
+              "auprc": 0.5019829114844734,
+              "auroc": 0.6161151960784313,
+              "candidate_count": 115.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 51.0,
+              "target_name": "IKZF3"
+            },
+            "ctx_004_RIOK2_RNF126": {
+              "auprc": 0.2703859987406719,
+              "auroc": 0.6865234375,
+              "candidate_count": 80.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 16.0,
+              "target_name": "RIOK2"
+            },
+            "ctx_005_BTK_DCAF16": {
+              "auprc": 0.041666666666666664,
+              "auroc": 0.8203125,
+              "candidate_count": 65.0,
+              "effector_name": "DCAF16",
+              "effector_uniprot": "Q9NXF7",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BTK"
+            },
+            "ctx_006_IKZF1_CRBN": {
+              "auprc": 0.6048455670377786,
+              "auroc": 0.6318933823529411,
+              "candidate_count": 132.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 68.0,
+              "target_name": "IKZF1"
+            },
+            "ctx_007_GSPT1_CRBN": {
+              "auprc": 0.5878639461512996,
+              "auroc": 0.4065020161290323,
+              "candidate_count": 188.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 124.0,
+              "target_name": "GSPT1"
+            },
+            "ctx_008_CK1\u03b1_CRBN": {
+              "auprc": 0.5755810201546315,
+              "auroc": 0.5966796875,
+              "candidate_count": 136.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 72.0,
+              "target_name": "CK1\u03b1"
+            },
+            "ctx_009_BRD4_DCAF16": {
+              "auprc": 0.17857142857142858,
+              "auroc": 0.8203125,
+              "candidate_count": 69.0,
+              "effector_name": "DCAF16",
+              "effector_uniprot": "Q9NXF7",
+              "negative_count": 64.0,
+              "positive_count": 5.0,
+              "target_name": "BRD4"
+            },
+            "ctx_010_ZNF276_CRBN": {
+              "auprc": 0.019230769230769232,
+              "auroc": 0.203125,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZNF276"
+            },
+            "ctx_011_BRD4_CRBN": {
+              "auprc": 0.018518518518518517,
+              "auroc": 0.171875,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BRD4"
+            },
+            "ctx_012_SALL4_CRBN": {
+              "auprc": 0.1671707465909707,
+              "auroc": 0.590625,
+              "candidate_count": 74.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 10.0,
+              "target_name": "SALL4"
+            },
+            "ctx_013_RBM39_DDB1": {
+              "auprc": 0.3333333333333333,
+              "auroc": 0.984375,
+              "candidate_count": 65.0,
+              "effector_name": "DDB1",
+              "effector_uniprot": "Q16531",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "RBM39"
+            },
+            "ctx_014_WEE1_CRBN": {
+              "auprc": 0.09895833333333333,
+              "auroc": 0.49609375,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "WEE1"
+            },
+            "ctx_015_WIZ_CRBN": {
+              "auprc": 0.20689655172413793,
+              "auroc": 0.8203125,
+              "candidate_count": 70.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 6.0,
+              "target_name": "WIZ"
+            },
+            "ctx_016_CDK4_RNF126": {
+              "auprc": 0.07048092868988391,
+              "auroc": 0.5989583333333333,
+              "candidate_count": 67.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 3.0,
+              "target_name": "CDK4"
+            },
+            "ctx_017_eRF1_RNF14": {
+              "auprc": 0.01694915254237288,
+              "auroc": 0.09375,
+              "candidate_count": 65.0,
+              "effector_name": "RNF14",
+              "effector_uniprot": "Q9UBS8",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "eRF1"
+            },
+            "ctx_018_SMARCA2_RNF126": {
+              "auprc": 0.05263157894736842,
+              "auroc": 0.859375,
+              "candidate_count": 65.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "SMARCA2"
+            },
+            "ctx_019_BRD4_RNF126": {
+              "auprc": 0.05263157894736842,
+              "auroc": 0.71875,
+              "candidate_count": 65.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BRD4"
+            },
+            "ctx_020_CYP19A1 aromatase_CRBN": {
+              "auprc": 0.06274131274131274,
+              "auroc": 0.63671875,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "CYP19A1 aromatase"
+            },
+            "ctx_021_ARID2_CRBN": {
+              "auprc": 0.024390243902439025,
+              "auroc": 0.375,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ARID2"
+            },
+            "ctx_022_PLZF_CRBN": {
+              "auprc": 0.058823529411764705,
+              "auroc": 0.625,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "PLZF"
+            },
+            "ctx_023_ZFP91_CRBN": {
+              "auprc": 0.043478260869565216,
+              "auroc": 0.671875,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZFP91"
+            },
+            "ctx_024_IRF4_CRBN": {
+              "auprc": 0.04,
+              "auroc": 0.625,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "IRF4"
+            },
+            "ctx_025_ZNF654_CRBN": {
+              "auprc": 0.04217854217854218,
+              "auroc": 0.4765625,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "ZNF654"
+            },
+            "ctx_026_ZNF787_CRBN": {
+              "auprc": 0.06666666666666667,
+              "auroc": 0.890625,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZNF787"
+            },
+            "ctx_027_ZNF653_CRBN": {
+              "auprc": 0.0395405669599218,
+              "auroc": 0.2708333333333333,
+              "candidate_count": 67.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 3.0,
+              "target_name": "ZNF653"
+            },
+            "ctx_028_FIZ1_CRBN": {
+              "auprc": 0.03173076923076923,
+              "auroc": 0.3046875,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "FIZ1"
+            },
+            "ctx_029_NEK7_CRBN": {
+              "auprc": 0.45011034354253443,
+              "auroc": 0.7825520833333333,
+              "candidate_count": 82.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 18.0,
+              "target_name": "NEK7"
+            },
+            "ctx_030_GSPT2_CRBN": {
+              "auprc": 0.038461538461538464,
+              "auroc": 0.609375,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "GSPT2"
+            },
+            "ctx_031_SMARCA2_FBXO22": {
+              "auprc": 0.05430136606337979,
+              "auroc": 0.23125,
+              "candidate_count": 69.0,
+              "effector_name": "FBXO22",
+              "effector_uniprot": "Q8NEZ5",
+              "negative_count": 64.0,
+              "positive_count": 5.0,
+              "target_name": "SMARCA2"
+            },
+            "ctx_032_RBM39_DCAF15": {
+              "auprc": 0.103006645194122,
+              "auroc": 0.5338541666666666,
+              "candidate_count": 70.0,
+              "effector_name": "DCAF15",
+              "effector_uniprot": "Q66K64",
+              "negative_count": 64.0,
+              "positive_count": 6.0,
+              "target_name": "RBM39"
+            },
+            "ctx_033_GEMIN3_VHL": {
+              "auprc": 0.029411764705882353,
+              "auroc": 0.7421875,
+              "candidate_count": 65.0,
+              "effector_name": "VHL",
+              "effector_uniprot": "P40337",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "GEMIN3"
+            }
+          }
+        },
+        "latentglue": {
+          "context_count": 33.0,
+          "macro_context_auprc": 0.2405359584246837,
+          "macro_context_auroc": 0.6532777969447799,
+          "per_context": {
+            "ctx_001_IKZF2_CRBN": {
+              "auprc": 0.32582550569194,
+              "auroc": 0.6293402777777778,
+              "candidate_count": 82.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 18.0,
+              "target_name": "IKZF2"
+            },
+            "ctx_002_NFKB1_UBE2D": {
+              "auprc": 0.3333333333333333,
+              "auroc": 0.91796875,
+              "candidate_count": 66.0,
+              "effector_name": "UBE2D",
+              "effector_uniprot": "Q7Z6J8",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "NFKB1"
+            },
+            "ctx_003_IKZF3_CRBN": {
+              "auprc": 0.43485761231465836,
+              "auroc": 0.5493259803921569,
+              "candidate_count": 115.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 51.0,
+              "target_name": "IKZF3"
+            },
+            "ctx_004_RIOK2_RNF126": {
+              "auprc": 0.2690310917225725,
+              "auroc": 0.6083984375,
+              "candidate_count": 80.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 16.0,
+              "target_name": "RIOK2"
+            },
+            "ctx_005_BTK_DCAF16": {
+              "auprc": 0.1111111111111111,
+              "auroc": 0.9375,
+              "candidate_count": 65.0,
+              "effector_name": "DCAF16",
+              "effector_uniprot": "Q9NXF7",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BTK"
+            },
+            "ctx_006_IKZF1_CRBN": {
+              "auprc": 0.6474853896930912,
+              "auroc": 0.6617647058823529,
+              "candidate_count": 132.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 68.0,
+              "target_name": "IKZF1"
+            },
+            "ctx_007_GSPT1_CRBN": {
+              "auprc": 0.7395978786057833,
+              "auroc": 0.6150453629032258,
+              "candidate_count": 188.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 124.0,
+              "target_name": "GSPT1"
+            },
+            "ctx_008_CK1\u03b1_CRBN": {
+              "auprc": 0.5001536767681789,
+              "auroc": 0.4849175347222222,
+              "candidate_count": 136.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 72.0,
+              "target_name": "CK1\u03b1"
+            },
+            "ctx_009_BRD4_DCAF16": {
+              "auprc": 0.24555555555555555,
+              "auroc": 0.865625,
+              "candidate_count": 69.0,
+              "effector_name": "DCAF16",
+              "effector_uniprot": "Q9NXF7",
+              "negative_count": 64.0,
+              "positive_count": 5.0,
+              "target_name": "BRD4"
+            },
+            "ctx_010_ZNF276_CRBN": {
+              "auprc": 0.015873015873015872,
+              "auroc": 0.03125,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZNF276"
+            },
+            "ctx_011_BRD4_CRBN": {
+              "auprc": 0.018518518518518517,
+              "auroc": 0.171875,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BRD4"
+            },
+            "ctx_012_SALL4_CRBN": {
+              "auprc": 0.12408969337896515,
+              "auroc": 0.41093749999999996,
+              "candidate_count": 74.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 10.0,
+              "target_name": "SALL4"
+            },
+            "ctx_013_RBM39_DDB1": {
+              "auprc": 0.1111111111111111,
+              "auroc": 0.875,
+              "candidate_count": 65.0,
+              "effector_name": "DDB1",
+              "effector_uniprot": "Q16531",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "RBM39"
+            },
+            "ctx_014_WEE1_CRBN": {
+              "auprc": 0.06203007518796992,
+              "auroc": 0.6171875,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "WEE1"
+            },
+            "ctx_015_WIZ_CRBN": {
+              "auprc": 0.10156926131754507,
+              "auroc": 0.5364583333333334,
+              "candidate_count": 70.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 6.0,
+              "target_name": "WIZ"
+            },
+            "ctx_016_CDK4_RNF126": {
+              "auprc": 0.3333333333333333,
+              "auroc": 0.953125,
+              "candidate_count": 67.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 3.0,
+              "target_name": "CDK4"
+            },
+            "ctx_017_eRF1_RNF14": {
+              "auprc": 0.125,
+              "auroc": 0.890625,
+              "candidate_count": 65.0,
+              "effector_name": "RNF14",
+              "effector_uniprot": "Q9UBS8",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "eRF1"
+            },
+            "ctx_018_SMARCA2_RNF126": {
+              "auprc": 0.0625,
+              "auroc": 0.8828125,
+              "candidate_count": 65.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "SMARCA2"
+            },
+            "ctx_019_BRD4_RNF126": {
+              "auprc": 0.2,
+              "auroc": 0.9375,
+              "candidate_count": 65.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BRD4"
+            },
+            "ctx_020_CYP19A1 aromatase_CRBN": {
+              "auprc": 0.05024509803921569,
+              "auroc": 0.52734375,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "CYP19A1 aromatase"
+            },
+            "ctx_021_ARID2_CRBN": {
+              "auprc": 0.07142857142857142,
+              "auroc": 0.796875,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ARID2"
+            },
+            "ctx_022_PLZF_CRBN": {
+              "auprc": 0.5833333333333333,
+              "auroc": 0.984375,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "PLZF"
+            },
+            "ctx_023_ZFP91_CRBN": {
+              "auprc": 0.038461538461538464,
+              "auroc": 0.625,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZFP91"
+            },
+            "ctx_024_IRF4_CRBN": {
+              "auprc": 0.017241379310344827,
+              "auroc": 0.109375,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "IRF4"
+            },
+            "ctx_025_ZNF654_CRBN": {
+              "auprc": 0.025568181818181816,
+              "auroc": 0.1328125,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "ZNF654"
+            },
+            "ctx_026_ZNF787_CRBN": {
+              "auprc": 1.0,
+              "auroc": 1.0,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZNF787"
+            },
+            "ctx_027_ZNF653_CRBN": {
+              "auprc": 0.037707953655519696,
+              "auroc": 0.22395833333333331,
+              "candidate_count": 67.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 3.0,
+              "target_name": "ZNF653"
+            },
+            "ctx_028_FIZ1_CRBN": {
+              "auprc": 0.15357142857142858,
+              "auroc": 0.71875,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "FIZ1"
+            },
+            "ctx_029_NEK7_CRBN": {
+              "auprc": 0.1787345094612753,
+              "auroc": 0.3828125,
+              "candidate_count": 82.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 18.0,
+              "target_name": "NEK7"
+            },
+            "ctx_030_GSPT2_CRBN": {
+              "auprc": 0.07142857142857142,
+              "auroc": 0.796875,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "GSPT2"
+            },
+            "ctx_031_SMARCA2_FBXO22": {
+              "auprc": 0.2902597402597402,
+              "auroc": 0.8578125,
+              "candidate_count": 69.0,
+              "effector_name": "FBXO22",
+              "effector_uniprot": "Q8NEZ5",
+              "negative_count": 64.0,
+              "positive_count": 5.0,
+              "target_name": "SMARCA2"
+            },
+            "ctx_032_RBM39_DCAF15": {
+              "auprc": 0.5476190476190477,
+              "auroc": 0.9505208333333334,
+              "candidate_count": 70.0,
+              "effector_name": "DCAF15",
+              "effector_uniprot": "Q66K64",
+              "negative_count": 64.0,
+              "positive_count": 6.0,
+              "target_name": "RBM39"
+            },
+            "ctx_033_GEMIN3_VHL": {
+              "auprc": 0.1111111111111111,
+              "auroc": 0.875,
+              "candidate_count": 65.0,
+              "effector_name": "VHL",
+              "effector_uniprot": "P40337",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "GEMIN3"
+            }
+          }
+        },
+        "projected_mean": {
+          "context_count": 33.0,
+          "macro_context_auprc": 0.18444060679112737,
+          "macro_context_auroc": 0.5499610283436037,
+          "per_context": {
+            "ctx_001_IKZF2_CRBN": {
+              "auprc": 0.4490118984789442,
+              "auroc": 0.6875,
+              "candidate_count": 82.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 18.0,
+              "target_name": "IKZF2"
+            },
+            "ctx_002_NFKB1_UBE2D": {
+              "auprc": 0.11515151515151516,
+              "auroc": 0.46875,
+              "candidate_count": 66.0,
+              "effector_name": "UBE2D",
+              "effector_uniprot": "Q7Z6J8",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "NFKB1"
+            },
+            "ctx_003_IKZF3_CRBN": {
+              "auprc": 0.3684872698457708,
+              "auroc": 0.3661151960784314,
+              "candidate_count": 115.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 51.0,
+              "target_name": "IKZF3"
+            },
+            "ctx_004_RIOK2_RNF126": {
+              "auprc": 0.2708255708721773,
+              "auroc": 0.68359375,
+              "candidate_count": 80.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 16.0,
+              "target_name": "RIOK2"
+            },
+            "ctx_005_BTK_DCAF16": {
+              "auprc": 0.05,
+              "auroc": 0.8515625,
+              "candidate_count": 65.0,
+              "effector_name": "DCAF16",
+              "effector_uniprot": "Q9NXF7",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BTK"
+            },
+            "ctx_006_IKZF1_CRBN": {
+              "auprc": 0.681253998532876,
+              "auroc": 0.6969209558823529,
+              "candidate_count": 132.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 68.0,
+              "target_name": "IKZF1"
+            },
+            "ctx_007_GSPT1_CRBN": {
+              "auprc": 0.7137028163120688,
+              "auroc": 0.5533644153225807,
+              "candidate_count": 188.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 124.0,
+              "target_name": "GSPT1"
+            },
+            "ctx_008_CK1\u03b1_CRBN": {
+              "auprc": 0.37827717559721463,
+              "auroc": 0.2192925347222222,
+              "candidate_count": 136.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 72.0,
+              "target_name": "CK1\u03b1"
+            },
+            "ctx_009_BRD4_DCAF16": {
+              "auprc": 0.05259760244232294,
+              "auroc": 0.209375,
+              "candidate_count": 69.0,
+              "effector_name": "DCAF16",
+              "effector_uniprot": "Q9NXF7",
+              "negative_count": 64.0,
+              "positive_count": 5.0,
+              "target_name": "BRD4"
+            },
+            "ctx_010_ZNF276_CRBN": {
+              "auprc": 0.023255813953488372,
+              "auroc": 0.34375,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZNF276"
+            },
+            "ctx_011_BRD4_CRBN": {
+              "auprc": 0.2,
+              "auroc": 0.9375,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BRD4"
+            },
+            "ctx_012_SALL4_CRBN": {
+              "auprc": 0.10135737742516258,
+              "auroc": 0.2875,
+              "candidate_count": 74.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 10.0,
+              "target_name": "SALL4"
+            },
+            "ctx_013_RBM39_DDB1": {
+              "auprc": 0.025,
+              "auroc": 0.390625,
+              "candidate_count": 65.0,
+              "effector_name": "DDB1",
+              "effector_uniprot": "Q16531",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "RBM39"
+            },
+            "ctx_014_WEE1_CRBN": {
+              "auprc": 0.140625,
+              "auroc": 0.4921875,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "WEE1"
+            },
+            "ctx_015_WIZ_CRBN": {
+              "auprc": 0.48511904761904756,
+              "auroc": 0.8958333333333334,
+              "candidate_count": 70.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 6.0,
+              "target_name": "WIZ"
+            },
+            "ctx_016_CDK4_RNF126": {
+              "auprc": 0.047104247104247106,
+              "auroc": 0.38541666666666663,
+              "candidate_count": 67.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 3.0,
+              "target_name": "CDK4"
+            },
+            "ctx_017_eRF1_RNF14": {
+              "auprc": 0.015384615384615385,
+              "auroc": 0.0,
+              "candidate_count": 65.0,
+              "effector_name": "RNF14",
+              "effector_uniprot": "Q9UBS8",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "eRF1"
+            },
+            "ctx_018_SMARCA2_RNF126": {
+              "auprc": 0.14285714285714285,
+              "auroc": 0.953125,
+              "candidate_count": 65.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "SMARCA2"
+            },
+            "ctx_019_BRD4_RNF126": {
+              "auprc": 0.07142857142857142,
+              "auroc": 0.796875,
+              "candidate_count": 65.0,
+              "effector_name": "RNF126",
+              "effector_uniprot": "Q9BV68",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "BRD4"
+            },
+            "ctx_020_CYP19A1 aromatase_CRBN": {
+              "auprc": 0.3666666666666667,
+              "auroc": 0.97265625,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "CYP19A1 aromatase"
+            },
+            "ctx_021_ARID2_CRBN": {
+              "auprc": 0.022727272727272728,
+              "auroc": 0.328125,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ARID2"
+            },
+            "ctx_022_PLZF_CRBN": {
+              "auprc": 0.26666666666666666,
+              "auroc": 0.9375,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "PLZF"
+            },
+            "ctx_023_ZFP91_CRBN": {
+              "auprc": 0.02127659574468085,
+              "auroc": 0.296875,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZFP91"
+            },
+            "ctx_024_IRF4_CRBN": {
+              "auprc": 0.2,
+              "auroc": 0.9375,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "IRF4"
+            },
+            "ctx_025_ZNF654_CRBN": {
+              "auprc": 0.02409957627118644,
+              "auroc": 0.0625,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "ZNF654"
+            },
+            "ctx_026_ZNF787_CRBN": {
+              "auprc": 0.09090909090909091,
+              "auroc": 0.921875,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "ZNF787"
+            },
+            "ctx_027_ZNF653_CRBN": {
+              "auprc": 0.04806298510212294,
+              "auroc": 0.390625,
+              "candidate_count": 67.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 3.0,
+              "target_name": "ZNF653"
+            },
+            "ctx_028_FIZ1_CRBN": {
+              "auprc": 0.038688282977155486,
+              "auroc": 0.3828125,
+              "candidate_count": 66.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 2.0,
+              "target_name": "FIZ1"
+            },
+            "ctx_029_NEK7_CRBN": {
+              "auprc": 0.23929789909259444,
+              "auroc": 0.5390625,
+              "candidate_count": 82.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 18.0,
+              "target_name": "NEK7"
+            },
+            "ctx_030_GSPT2_CRBN": {
+              "auprc": 0.2,
+              "auroc": 0.9375,
+              "candidate_count": 65.0,
+              "effector_name": "CRBN",
+              "effector_uniprot": "Q96SW2",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "GSPT2"
+            },
+            "ctx_031_SMARCA2_FBXO22": {
+              "auprc": 0.046620090793545774,
+              "auroc": 0.084375,
+              "candidate_count": 69.0,
+              "effector_name": "FBXO22",
+              "effector_uniprot": "Q8NEZ5",
+              "negative_count": 64.0,
+              "positive_count": 5.0,
+              "target_name": "SMARCA2"
+            },
+            "ctx_032_RBM39_DCAF15": {
+              "auprc": 0.06508523415105502,
+              "auroc": 0.24739583333333331,
+              "candidate_count": 70.0,
+              "effector_name": "DCAF15",
+              "effector_uniprot": "Q66K64",
+              "negative_count": 64.0,
+              "positive_count": 6.0,
+              "target_name": "RBM39"
+            },
+            "ctx_033_GEMIN3_VHL": {
+              "auprc": 0.125,
+              "auroc": 0.890625,
+              "candidate_count": 65.0,
+              "effector_name": "VHL",
+              "effector_uniprot": "P40337",
+              "negative_count": 64.0,
+              "positive_count": 1.0,
+              "target_name": "GEMIN3"
+            }
+          }
+        }
+      }
+    },
+    "val": {
+      "config": {
+        "batch_size": 32.0,
+        "n_folds": 5.0,
+        "negatives_per_context": 45.0,
+        "rng_seed": 17.0,
+        "scorer": "LowRankBilinearScorer(rank=64) + BCEWithLogitsLoss + AdamW(lr=0.001, weight_decay=0.0001)",
+        "split_strategy": "grouped context holdout cross-validation on GlueDegradDB val split"
+      },
+      "dataset": {
+        "context_negative_count_mean": 45.0,
+        "context_positive_count_mean": 10.631578947368421,
+        "name": "GlueDegradDB val split",
+        "num_contexts": 19.0,
+        "num_pairs": 1057.0,
+        "num_rows": 202.0
+      },
+      "folds": {
+        "context_counts": [
+          1.0,
+          4.0,
+          4.0,
+          5.0,
+          5.0
+        ],
+        "pair_counts": [
+          202.0,
+          196.0,
+          192.0,
+          234.0,
+          233.0
+        ]
+      },
+      "representations": {
+        "frozen_mean": {
+          "context_count": 19.0,
+          "macro_context_auprc": 0.21372193827055486,
+          "macro_context_auroc": 0.574408597573197,
+          "per_context": {
+            "ctx_001_CTNNB1_BTRC": {
+              "auprc": 0.20494838494838497,
+              "auroc": 0.6634920634920635,
+              "candidate_count": 52.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 7.0,
+              "target_name": "CTNNB1"
+            },
+            "ctx_002_USP28_FBW7": {
+              "auprc": 0.7096935278606776,
+              "auroc": 0.44656758669497526,
+              "candidate_count": 202.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 157.0,
+              "target_name": "USP28"
+            },
+            "ctx_003_IMPDH2_PPIA": {
+              "auprc": 0.5,
+              "auroc": 0.9777777777777777,
+              "candidate_count": 47.0,
+              "effector_name": "PPIA",
+              "effector_uniprot": "P62937",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "IMPDH2"
+            },
+            "ctx_004_FKBP1A_MTOR": {
+              "auprc": 0.14285714285714285,
+              "auroc": 0.9333333333333333,
+              "candidate_count": 46.0,
+              "effector_name": "MTOR",
+              "effector_uniprot": "P42345",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "FKBP1A"
+            },
+            "ctx_005_eEF2K_BTRC": {
+              "auprc": 0.17492256603172981,
+              "auroc": 0.3666666666666667,
+              "candidate_count": 57.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 12.0,
+              "target_name": "eEF2K"
+            },
+            "ctx_006_PDCD4_BTRC": {
+              "auprc": 0.022727272727272728,
+              "auroc": 0.0444444444444444,
+              "candidate_count": 46.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "PDCD4"
+            },
+            "ctx_007_CABIN1_PPIA": {
+              "auprc": 0.5,
+              "auroc": 0.9777777777777779,
+              "candidate_count": 47.0,
+              "effector_name": "PPIA",
+              "effector_uniprot": "P62937",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "CABIN1"
+            },
+            "ctx_008_CAPN1_FKBP1A": {
+              "auprc": 0.07142857142857142,
+              "auroc": 0.7111111111111111,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "CAPN1"
+            },
+            "ctx_009_NOTCH2_FBW7": {
+              "auprc": 0.06601731601731602,
+              "auroc": 0.5166666666666666,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "NOTCH2"
+            },
+            "ctx_010_JUN_FBW7": {
+              "auprc": 0.08193979933110368,
+              "auroc": 0.6388888888888888,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "JUN"
+            },
+            "ctx_011_CCNE1_FBW7": {
+              "auprc": 0.03463203463203463,
+              "auroc": 0.08333333333333334,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "CCNE1"
+            },
+            "ctx_012_FKBP1A_FKBP1A": {
+              "auprc": 0.10209790209790211,
+              "auroc": 0.6148148148148148,
+              "candidate_count": 48.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 3.0,
+              "target_name": "FKBP1A"
+            },
+            "ctx_013_MTOR_FKBP1A": {
+              "auprc": 0.3333333333333333,
+              "auroc": 0.9777777777777779,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "MTOR"
+            },
+            "ctx_014_CEP250_FKBP1A": {
+              "auprc": 0.022222222222222223,
+              "auroc": 0.022222222222222254,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "CEP250"
+            },
+            "ctx_015_PPIA_PPIL2": {
+              "auprc": 0.02564102564102564,
+              "auroc": 0.15555555555555556,
+              "candidate_count": 46.0,
+              "effector_name": "PPIL2",
+              "effector_uniprot": "Q13356",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "PPIA"
+            },
+            "ctx_016_BCL6_SIAH1": {
+              "auprc": 0.11666666666666667,
+              "auroc": 0.7555555555555555,
+              "candidate_count": 47.0,
+              "effector_name": "SIAH1",
+              "effector_uniprot": "Q8IUQ4",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "BCL6"
+            },
+            "ctx_017_BCL6_BCL6": {
+              "auprc": 0.5833333333333333,
+              "auroc": 0.9833333333333333,
+              "candidate_count": 47.0,
+              "effector_name": "BCL6",
+              "effector_uniprot": "P41182",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "BCL6"
+            },
+            "ctx_018_ETS1_SYVN1": {
+              "auprc": 0.3333333333333333,
+              "auroc": 0.9555555555555556,
+              "candidate_count": 46.0,
+              "effector_name": "SYVN1",
+              "effector_uniprot": "Q86TM6",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "ETS1"
+            },
+            "ctx_019_XPO1_ASB8": {
+              "auprc": 0.034922394678492244,
+              "auroc": 0.0888888888888889,
+              "candidate_count": 47.0,
+              "effector_name": "ASB8",
+              "effector_uniprot": "Q9H765",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "XPO1"
+            }
+          }
+        },
+        "latentglue": {
+          "context_count": 19.0,
+          "macro_context_auprc": 0.23323875783819506,
+          "macro_context_auroc": 0.6621838566692739,
+          "per_context": {
+            "ctx_001_CTNNB1_BTRC": {
+              "auprc": 0.10134030728996404,
+              "auroc": 0.26666666666666666,
+              "candidate_count": 52.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 7.0,
+              "target_name": "CTNNB1"
+            },
+            "ctx_002_USP28_FBW7": {
+              "auprc": 0.7744172361896369,
+              "auroc": 0.6537154989384288,
+              "candidate_count": 202.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 157.0,
+              "target_name": "USP28"
+            },
+            "ctx_003_IMPDH2_PPIA": {
+              "auprc": 0.2777777777777778,
+              "auroc": 0.9,
+              "candidate_count": 47.0,
+              "effector_name": "PPIA",
+              "effector_uniprot": "P62937",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "IMPDH2"
+            },
+            "ctx_004_FKBP1A_MTOR": {
+              "auprc": 0.1,
+              "auroc": 0.8,
+              "candidate_count": 46.0,
+              "effector_name": "MTOR",
+              "effector_uniprot": "P42345",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "FKBP1A"
+            },
+            "ctx_005_eEF2K_BTRC": {
+              "auprc": 0.12687063718454894,
+              "auroc": 0.07592592592592591,
+              "candidate_count": 57.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 12.0,
+              "target_name": "eEF2K"
+            },
+            "ctx_006_PDCD4_BTRC": {
+              "auprc": 1.0,
+              "auroc": 1.0,
+              "candidate_count": 46.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "PDCD4"
+            },
+            "ctx_007_CABIN1_PPIA": {
+              "auprc": 0.25,
+              "auroc": 0.9333333333333333,
+              "candidate_count": 47.0,
+              "effector_name": "PPIA",
+              "effector_uniprot": "P62937",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "CABIN1"
+            },
+            "ctx_008_CAPN1_FKBP1A": {
+              "auprc": 0.2,
+              "auroc": 0.9111111111111111,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "CAPN1"
+            },
+            "ctx_009_NOTCH2_FBW7": {
+              "auprc": 0.06547619047619047,
+              "auroc": 0.5388888888888889,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "NOTCH2"
+            },
+            "ctx_010_JUN_FBW7": {
+              "auprc": 0.03721075672295185,
+              "auroc": 0.15,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "JUN"
+            },
+            "ctx_011_CCNE1_FBW7": {
+              "auprc": 0.038798920377867745,
+              "auroc": 0.18333333333333335,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "CCNE1"
+            },
+            "ctx_012_FKBP1A_FKBP1A": {
+              "auprc": 0.35757575757575755,
+              "auroc": 0.9185185185185185,
+              "candidate_count": 48.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 3.0,
+              "target_name": "FKBP1A"
+            },
+            "ctx_013_MTOR_FKBP1A": {
+              "auprc": 0.25,
+              "auroc": 0.9666666666666667,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "MTOR"
+            },
+            "ctx_014_CEP250_FKBP1A": {
+              "auprc": 0.125,
+              "auroc": 0.9222222222222222,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "CEP250"
+            },
+            "ctx_015_PPIA_PPIL2": {
+              "auprc": 0.024390243902439025,
+              "auroc": 0.11111111111111116,
+              "candidate_count": 46.0,
+              "effector_name": "PPIL2",
+              "effector_uniprot": "Q13356",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "PPIA"
+            },
+            "ctx_016_BCL6_SIAH1": {
+              "auprc": 0.17142857142857143,
+              "auroc": 0.8444444444444444,
+              "candidate_count": 47.0,
+              "effector_name": "SIAH1",
+              "effector_uniprot": "Q8IUQ4",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "BCL6"
+            },
+            "ctx_017_BCL6_BCL6": {
+              "auprc": 0.20833333333333331,
+              "auroc": 0.8833333333333334,
+              "candidate_count": 47.0,
+              "effector_name": "BCL6",
+              "effector_uniprot": "P41182",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "BCL6"
+            },
+            "ctx_018_ETS1_SYVN1": {
+              "auprc": 0.25,
+              "auroc": 0.9333333333333332,
+              "candidate_count": 46.0,
+              "effector_name": "SYVN1",
+              "effector_uniprot": "Q86TM6",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "ETS1"
+            },
+            "ctx_019_XPO1_ASB8": {
+              "auprc": 0.07291666666666666,
+              "auroc": 0.5888888888888888,
+              "candidate_count": 47.0,
+              "effector_name": "ASB8",
+              "effector_uniprot": "Q9H765",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "XPO1"
+            }
+          }
+        },
+        "projected_mean": {
+          "context_count": 19.0,
+          "macro_context_auprc": 0.18812169665084344,
+          "macro_context_auroc": 0.5923488835322559,
+          "per_context": {
+            "ctx_001_CTNNB1_BTRC": {
+              "auprc": 0.22972580640647866,
+              "auroc": 0.653968253968254,
+              "candidate_count": 52.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 7.0,
+              "target_name": "CTNNB1"
+            },
+            "ctx_002_USP28_FBW7": {
+              "auprc": 0.7805754331997508,
+              "auroc": 0.5858457183297948,
+              "candidate_count": 202.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 157.0,
+              "target_name": "USP28"
+            },
+            "ctx_003_IMPDH2_PPIA": {
+              "auprc": 0.4,
+              "auroc": 0.9666666666666667,
+              "candidate_count": 47.0,
+              "effector_name": "PPIA",
+              "effector_uniprot": "P62937",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "IMPDH2"
+            },
+            "ctx_004_FKBP1A_MTOR": {
+              "auprc": 0.16666666666666666,
+              "auroc": 0.9444444444444444,
+              "candidate_count": 46.0,
+              "effector_name": "MTOR",
+              "effector_uniprot": "P42345",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "FKBP1A"
+            },
+            "ctx_005_eEF2K_BTRC": {
+              "auprc": 0.2890536575185698,
+              "auroc": 0.6851851851851851,
+              "candidate_count": 57.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 12.0,
+              "target_name": "eEF2K"
+            },
+            "ctx_006_PDCD4_BTRC": {
+              "auprc": 0.022222222222222223,
+              "auroc": 0.022222222222222254,
+              "candidate_count": 46.0,
+              "effector_name": "BTRC",
+              "effector_uniprot": "Q9Y297",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "PDCD4"
+            },
+            "ctx_007_CABIN1_PPIA": {
+              "auprc": 0.22619047619047616,
+              "auroc": 0.8944444444444444,
+              "candidate_count": 47.0,
+              "effector_name": "PPIA",
+              "effector_uniprot": "P62937",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "CABIN1"
+            },
+            "ctx_008_CAPN1_FKBP1A": {
+              "auprc": 0.14285714285714285,
+              "auroc": 0.8666666666666667,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "CAPN1"
+            },
+            "ctx_009_NOTCH2_FBW7": {
+              "auprc": 0.065,
+              "auroc": 0.5388888888888889,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "NOTCH2"
+            },
+            "ctx_010_JUN_FBW7": {
+              "auprc": 0.06020066889632107,
+              "auroc": 0.48888888888888893,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "JUN"
+            },
+            "ctx_011_CCNE1_FBW7": {
+              "auprc": 0.04882154882154882,
+              "auroc": 0.37222222222222223,
+              "candidate_count": 47.0,
+              "effector_name": "FBW7",
+              "effector_uniprot": "Q969H0",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "CCNE1"
+            },
+            "ctx_012_FKBP1A_FKBP1A": {
+              "auprc": 0.05562770562770562,
+              "auroc": 0.274074074074074,
+              "candidate_count": 48.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 3.0,
+              "target_name": "FKBP1A"
+            },
+            "ctx_013_MTOR_FKBP1A": {
+              "auprc": 0.3333333333333333,
+              "auroc": 0.9666666666666667,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "MTOR"
+            },
+            "ctx_014_CEP250_FKBP1A": {
+              "auprc": 0.022727272727272728,
+              "auroc": 0.0444444444444444,
+              "candidate_count": 46.0,
+              "effector_name": "FKBP1A",
+              "effector_uniprot": "P62942",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "CEP250"
+            },
+            "ctx_015_PPIA_PPIL2": {
+              "auprc": 0.058823529411764705,
+              "auroc": 0.6444444444444444,
+              "candidate_count": 46.0,
+              "effector_name": "PPIL2",
+              "effector_uniprot": "Q13356",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "PPIA"
+            },
+            "ctx_016_BCL6_SIAH1": {
+              "auprc": 0.07777777777777778,
+              "auroc": 0.4333333333333333,
+              "candidate_count": 47.0,
+              "effector_name": "SIAH1",
+              "effector_uniprot": "Q8IUQ4",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "BCL6"
+            },
+            "ctx_017_BCL6_BCL6": {
+              "auprc": 0.5,
+              "auroc": 0.9722222222222223,
+              "candidate_count": 47.0,
+              "effector_name": "BCL6",
+              "effector_uniprot": "P41182",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "BCL6"
+            },
+            "ctx_018_ETS1_SYVN1": {
+              "auprc": 0.047619047619047616,
+              "auroc": 0.5555555555555556,
+              "candidate_count": 46.0,
+              "effector_name": "SYVN1",
+              "effector_uniprot": "Q86TM6",
+              "negative_count": 45.0,
+              "positive_count": 1.0,
+              "target_name": "ETS1"
+            },
+            "ctx_019_XPO1_ASB8": {
+              "auprc": 0.047089947089947085,
+              "auroc": 0.3444444444444445,
+              "candidate_count": 47.0,
+              "effector_name": "ASB8",
+              "effector_uniprot": "Q9H765",
+              "negative_count": 45.0,
+              "positive_count": 2.0,
+              "target_name": "XPO1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "summary_figures": {
+    "activity_prediction": "data/results/activity_prediction.png",
+    "effective_dim_eval": "data/results/effective_dim_eval.png",
+    "ligand_attention": "data/results/ligand_attention.png",
+    "retrieval": "data/results/retrieval.png"
+  }
 }
