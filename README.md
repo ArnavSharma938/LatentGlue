@@ -13,12 +13,10 @@
   <table style="border: none;">
     <tr>
       <td width="50%" valign="top" style="border: none;">
-        <img src="data/results/full_eval_figures/activity_prediction_scatter_latentglue.png" width="100%" />
+        <img src="data/results/activity_prediction.png" width="100%" />
       </td>
       <td width="50%" valign="top" style="border: none;">
-        <img src="data/results/full_eval_figures/hypersphere_geometry_eval.png" width="100%" />
-        <br>
-        <img src="data/results/full_eval_figures/uniformity_bars.png" width="100%" />
+        <img src="data/results/retrieval.png" width="100%" />
       </td>
     </tr>
   </table>
@@ -40,37 +38,27 @@ LatentGlue is a 635 million-parameter self-supervised representation learning mo
 | Projected | 0.709 | 0.337 |
 | LatentGlue | 0.570 | 0.476 |
 
-**Effective dimensionality on `val`**
+**Effective dimensionality**
 
-| Representation family | Target | Effector | Ligand |
-| --- | ---: | ---: | ---: |
-| Frozen | 195.1 | 204.8 | 640.8 |
-| Projected | 600.2 | 577.9 | 718.4 |
-| LatentGlue | 607.7 | 568.8 | 648.8 |
+| Split | Representation family | Target | Effector | Ligand |
+| --- | --- | ---: | ---: | ---: |
+| Val | Frozen | 195.1 | 204.8 | 640.8 |
+| Val | Projected | 600.2 | 577.9 | 718.4 |
+| Val | LatentGlue | 607.7 | 568.8 | 648.8 |
+| Eval | Frozen | 300.1 | 212.5 | 632.7 |
+| Eval | Projected | 587.1 | 531.6 | 724.1 |
+| Eval | LatentGlue | 528.6 | 498.9 | 658.0 |
 
-**Effective dimensionality on `Eval`**
+**Retrieval**
 
-| Representation family | Target | Effector | Ligand |
-| --- | ---: | ---: | ---: |
-| Frozen | 300.1 | 212.5 | 632.7 |
-| Projected | 587.1 | 531.6 | 724.1 |
-| LatentGlue | 528.6 | 498.9 | 658.0 |
-
-**Retrieval on `val`**
-
-| Representation family | Macro context AUROC | Macro context AUPRC |
-| --- | ---: | ---: |
-| Frozen | 0.574 | 0.214 |
-| Projected | 0.592 | 0.188 |
-| LatentGlue | 0.662 | 0.233 |
-
-**Retrieval on `Eval`**
-
-| Representation family | Macro context AUROC | Macro context AUPRC |
-| --- | ---: | ---: |
-| Frozen | 0.589 | 0.162 |
-| Projected | 0.550 | 0.184 |
-| LatentGlue | 0.653 | 0.241 |
+| Split | Representation family | Macro context AUROC | Macro context AUPRC |
+| --- | --- | ---: | ---: |
+| Val | Frozen | 0.574 | 0.214 |
+| Val | Projected | 0.592 | 0.188 |
+| Val | LatentGlue | 0.662 | 0.233 |
+| Eval | Frozen | 0.589 | 0.162 |
+| Eval | Projected | 0.550 | 0.184 |
+| Eval | LatentGlue | 0.653 | 0.241 |
 
 **Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/ArnavSharma938/LatentGlue).**
 
