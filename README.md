@@ -49,7 +49,7 @@ LatentGlue is a 635 million-parameter self-supervised representation learning mo
 | Eval | Projected | 587.1 | 531.6 | 724.1 |
 | Eval | LatentGlue | 528.6 | 498.9 | 658.0 |
 
-**Retrieval**
+**Retrieval at 19% val and 17% eval**
 
 | Split | Representation family | Macro context AUROC | Macro context AUPRC |
 | --- | --- | ---: | ---: |
