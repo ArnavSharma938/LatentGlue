@@ -36,7 +36,7 @@ LatentGlue is a 635 million-parameter self-supervised representation learning mo
 | --- | ---: | ---: |
 | Frozen | 0.665 | 0.364 |
 | Projected | 0.709 | 0.337 |
-| LatentGlue | 0.570 | 0.476 |
+**| LatentGlue | 0.570 | 0.476 |**
 
 **Effective dimensionality**
 
@@ -44,10 +44,10 @@ LatentGlue is a 635 million-parameter self-supervised representation learning mo
 | --- | --- | ---: | ---: | ---: |
 | Val | Frozen | 195.1 | 204.8 | 640.8 |
 | Val | Projected | 600.2 | 577.9 | 718.4 |
-| Val | LatentGlue | 607.7 | 568.8 | 648.8 |
+**| Val | LatentGlue | 607.7 | 568.8 | 648.8 |**
 | Eval | Frozen | 300.1 | 212.5 | 632.7 |
 | Eval | Projected | 587.1 | 531.6 | 724.1 |
-| Eval | LatentGlue | 528.6 | 498.9 | 658.0 |
+**| Eval | LatentGlue | 528.6 | 498.9 | 658.0 |**
 
 **Retrieval at 19% val and 17% eval**
 
@@ -55,10 +55,10 @@ LatentGlue is a 635 million-parameter self-supervised representation learning mo
 | --- | --- | ---: | ---: |
 | Val | Frozen | 0.574 | 0.214 |
 | Val | Projected | 0.592 | 0.188 |
-| Val | LatentGlue | 0.662 | 0.233 |
+**| Val | LatentGlue | 0.662 | 0.233 |**
 | Eval | Frozen | 0.589 | 0.162 |
 | Eval | Projected | 0.550 | 0.184 |
-| Eval | LatentGlue | 0.653 | 0.241 |
+**| Eval | LatentGlue | 0.653 | 0.241 |**
 
 **Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/ArnavSharma938/LatentGlue).**
 
