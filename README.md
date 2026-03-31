@@ -1,4 +1,4 @@
-<h1 align="center">Learning General Representations of Molecular Glues in Latent Space</h1>
+<h1 align="center">Learning Transferable Representations of Molecular Glues in Latent Space</h1>
 
 <div align="center">
 
@@ -114,7 +114,7 @@ If you find this repository useful, please cite it as software while the paper i
 ```bibtex
 @software{sharma2026latentglue,
   author = {Sharma, Arnav},
-  title = {Learning General Representations of Molecular Glues in Isotropic Latent Space},
+  title = {Learning Transferable Representations of Molecular Glues in Latent Space},
   year = {2026},
   url = {https://github.com/ArnavSharma938/LatentGlue},
 }
