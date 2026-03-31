@@ -1,0 +1,94 @@
+{
+  "activity": {
+    "counts": {
+      "canonical_smiles": 233,
+      "rows": 233,
+      "smiles": 233,
+      "targets": 2
+    },
+    "ligand": {
+      "exact": 0,
+      "hits": {
+        "10pct": {
+          "at_or_above": 233,
+          "below": 0
+        },
+        "20pct": {
+          "at_or_above": 233,
+          "below": 0
+        },
+        "30pct": {
+          "at_or_above": 196,
+          "below": 37
+        },
+        "70pct": {
+          "at_or_above": 0,
+          "below": 233
+        }
+      },
+      "invalid": 0,
+      "scores": {
+        "max": 0.6363636363636364,
+        "median": 0.3984375,
+        "min": 0.2653061224489796
+      },
+      "valid": 233
+    },
+    "target": {
+      "hits": {
+        "10pct": {
+          "at_or_above": 233,
+          "below": 0
+        },
+        "20pct": {
+          "at_or_above": 124,
+          "below": 109
+        },
+        "30pct": {
+          "at_or_above": 124,
+          "below": 109
+        },
+        "70pct": {
+          "at_or_above": 0,
+          "below": 233
+        }
+      },
+      "scores": {
+        "max": 0.4484848484848485,
+        "median": 0.4484848484848485,
+        "min": 0.14213483146067415
+      }
+    }
+  },
+  "ligand_method": {
+    "canonicalization": "RDKit canonical non-isomeric SMILES via src.processing.mol_utils.canonicalize_smiles",
+    "fingerprint": "Morgan",
+    "fp_size": 2048,
+    "library": "RDKit",
+    "radius": 2,
+    "similarity": "Tanimoto",
+    "thresholds": [
+      0.1,
+      0.2,
+      0.3,
+      0.7
+    ]
+  },
+  "rank": 1,
+  "target_method": {
+    "extend_gap": -0.5,
+    "identity": "matches / alignment_columns",
+    "library": "Biopython PairwiseAligner",
+    "match": 2.0,
+    "mismatch": -1.0,
+    "mode": "global",
+    "open_gap": -10.0,
+    "thresholds": [
+      0.1,
+      0.2,
+      0.3,
+      0.7
+    ]
+  },
+  "train_ref_split": "GlueDegradDB split == train"
+}

@@ -1,4 +1,4 @@
-<h1 align="center">Learning General Representations of Molecular Glues in Isotropic Latent Space</h1>
+<h1 align="center">Learning General Representations of Molecular Glues in Latent Space</h1>
 
 <div align="center">
 
@@ -59,6 +59,10 @@ LatentGlue is a 635 million-parameter self-supervised representation learning mo
 | Eval | Frozen | 0.589 | 0.162 |
 | Eval | Projected | 0.550 | 0.184 |
 | Eval | **LatentGlue** | **0.653** | **0.241** |
+
+All val rows are not overlapping with train + they remain below 0.30 protein identity to train + median ligand tanimoto is 0.272. See `data/results/sequence_sim/nearest_train_neighbor_report.json` and `data/results/sequence_sim/second_nearest_train_neighbor_report.json` for the full breakdown.
+
+The activity set is less novel with 0 overlaps but median nearest-train target similarity at 0.448 and median nearest-train ligand Tanimoto at 0.398. But LatentGlue still significantly beats projected.
 
 **Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/ArnavSharma938/LatentGlue).**
 

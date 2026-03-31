@@ -42,10 +42,6 @@ Data used:
 - section 3: `data/GlueDegradDB.csv` with `split == "val"` and `data/GlueDegradDB-Eval.csv`
 - section 4: `data/GlueDegradDB-Eval.csv`
 
-Run this first:
-sudo apt-get update
-sudo apt-get install -y libxrender1
-sudo apt-get install -y libxext6 libsm6
 """
 
 import json
@@ -64,6 +60,7 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
 from src.model.dataset import collate_ternary
 from src.model.model import LatentGlueEncoder
+from src.processing.mol_utils import canonicalize_smiles as dataset_canonicalize_smiles
 from src.model.train import AUTOCAST_DTYPE
 from src.validation.in_train_eval import (activity_targets, build_target_balanced_folds, masked_mean_pool, spectral_effective_dimension,
 )
@@ -368,14 +365,6 @@ def get_representations(repr_cache, cache_key, df, encoder, batch_size, autocast
         )
     return repr_cache[cache_key]
 
-def canonicalize_smiles(smiles):
-    from rdkit import Chem
-
-    mol = Chem.MolFromSmiles(str(smiles).strip())
-    if mol is None:
-        raise ValueError(f"Invalid SMILES: {smiles}")
-    return Chem.MolToSmiles(mol, canonical=True)
-
 def smiles_atom_spans(smiles):
     spans = []
     i = 0
@@ -456,7 +445,9 @@ def extract_seed_attention_weights(pool_module, x, mask=None):
 
 @torch.no_grad()
 def compute_ligand_attention(encoder, smiles, autocast_enabled):
-    canonical_smiles = canonicalize_smiles(smiles)
+    canonical_smiles = dataset_canonicalize_smiles(smiles)
+    if not canonical_smiles:
+        raise ValueError(f"Invalid SMILES: {smiles}")
     tokenized = encoder.mol_tokenizer(
         [canonical_smiles],
         return_offsets_mapping=True,
@@ -535,7 +526,9 @@ def build_eval_ligand_attention_records(eval_df):
 
     unique_records = {}
     for row in eval_df.to_dict("records"):
-        canonical_smiles = canonicalize_smiles(row["SMILES"])
+        canonical_smiles = dataset_canonicalize_smiles(row["SMILES"])
+        if not canonical_smiles:
+            raise ValueError(f"Invalid SMILES: {row['SMILES']}")
         record = unique_records.get(canonical_smiles)
         if record is None:
             unique_records[canonical_smiles] = {
@@ -636,90 +629,7 @@ def select_representative_attention_panels(panel_data):
 
     return [panel_data[idx] for idx in selected_indices]
 
-def render_molecule_attention_image(mol, atom_weights, norm, cmap, width=420, height=320):
-    import io
-    import matplotlib.image as mpimg
-    from rdkit.Chem.Draw import rdMolDraw2D
-
-    prepared = rdMolDraw2D.PrepareMolForDrawing(mol)
-    drawer = rdMolDraw2D.MolDraw2DCairo(width, height)
-    options = drawer.drawOptions()
-    options.useBWAtomPalette()
-    options.padding = 0.04
-
-    highlight_atoms = list(range(prepared.GetNumAtoms()))
-    highlight_colors = {}
-    highlight_radii = {}
-    for atom_idx in highlight_atoms:
-        rgba = cmap(norm(float(atom_weights[atom_idx])))
-        highlight_colors[atom_idx] = (float(rgba[0]), float(rgba[1]), float(rgba[2]))
-        highlight_radii[atom_idx] = 0.32 + 0.18 * float(norm(float(atom_weights[atom_idx])))
-
-    drawer.DrawMolecule(
-        prepared,
-        highlightAtoms=highlight_atoms,
-        highlightAtomColors=highlight_colors,
-        highlightAtomRadii=highlight_radii,
-    )
-    drawer.FinishDrawing()
-    return mpimg.imread(io.BytesIO(drawer.GetDrawingText()), format="png")
-
-def save_ligand_attention_figure(panel_data, output_path, title):
-    matplotlib, plt = load_matplotlib()
-    from matplotlib import colors
-
-    if not panel_data:
-        raise ValueError("panel_data must contain at least one ligand panel.")
-
-    ensure_output_dir(output_path)
-
-    cmap = matplotlib.colormaps.get_cmap("coolwarm")
-
-    n_cols = min(ATTENTION_PANEL_COLUMNS, len(panel_data))
-    n_rows = int(np.ceil(len(panel_data) / n_cols))
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4.2 * n_cols, 3.8 * n_rows))
-    try:
-        axes = np.asarray(axes, dtype=object).reshape(-1)
-
-        for col_idx, panel in enumerate(panel_data):
-            ax = axes[col_idx]
-            panel_weights = np.asarray(panel["atom_weights"], dtype=np.float32)
-            if not panel_weights.size:
-                raise ValueError(
-                    f"Ligand attention figure cannot be generated from empty atom weights for {panel['ligand_name']}."
-                )
-            vmin = float(panel_weights.min())
-            vmax = float(panel_weights.max())
-            if vmax <= vmin:
-                vmax = vmin + 1e-6
-            norm = colors.Normalize(vmin=vmin, vmax=vmax)
-
-            image = render_molecule_attention_image(panel["mol"], panel_weights, norm=norm, cmap=cmap)
-            ax.imshow(image)
-            ax.axis("off")
-            subtitle = panel.get("panel_subtitle", "")
-            ax.set_title(
-                panel["ligand_name"] if not subtitle else f"{panel['ligand_name']}\n{subtitle}",
-                fontsize=10,
-            )
-
-            scalar_map = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-            colorbar = fig.colorbar(scalar_map, ax=ax, fraction=0.046, pad=0.03)
-            colorbar.set_label("Relative attention")
-
-        for ax in axes[len(panel_data) :]:
-            ax.axis("off")
-
-        fig.suptitle(title, fontsize=12)
-        fig.text(0.5, 0.92, "Each ligand panel uses its own color scale.", ha="center", fontsize=9)
-        fig.subplots_adjust(left=0.03, right=0.98, bottom=0.06, top=0.88, wspace=0.25, hspace=0.35)
-        fig.savefig(output_path, dpi=SUMMARY_FIGURE_DPI, bbox_inches="tight")
-    finally:
-        plt.close(fig)
-
 def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
-    if not output_path:
-        raise ValueError("attention_figure_path must be provided.")
     ligand_records = build_eval_ligand_attention_records(eval_df)
     if not ligand_records:
         raise RuntimeError("Eval ligand attention did not find any unique ligands.")
@@ -776,7 +686,6 @@ def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
         "num_unique_ligands": float(len(panel_data)),
         "representative_panel_count": float(len(representative_panels)),
         "occupied_bin_count": occupied_bin_count,
-        "figure_path": output_path,
         "summary": summary,
         "attention_bin_counts": attention_bin_counts,
         "representative_panels": [
@@ -798,11 +707,6 @@ def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
             for panel in representative_panels
         ],
     }
-    save_ligand_attention_figure(
-        representative_panels,
-        output_path=output_path,
-        title="Representative ligand attention across GlueDegradDB-Eval",
-    )
     return result
 
 def format_figure_value(value):
@@ -1039,7 +943,6 @@ def generate_summary_figures(metrics, effective_dim_figure_path, activity_figure
         "effective_dim_eval": str(effective_dim_figure_path),
         "activity_prediction": str(activity_figure_path),
         "retrieval": str(retrieval_figure_path),
-        "ligand_attention": str(metrics["ligand_attention"]["figure_path"]),
     }
 
 @dataclass(frozen=True)

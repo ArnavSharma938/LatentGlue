@@ -1,0 +1,205 @@
+{
+  "eval": {
+    "counts": {
+      "canonical_smiles": 422,
+      "effectors": 9,
+      "rows": 430,
+      "smiles": 422,
+      "targets": 29
+    },
+    "ligand": {
+      "exact": 59,
+      "hits": {
+        "10pct": {
+          "at_or_above": 430,
+          "below": 0
+        },
+        "20pct": {
+          "at_or_above": 430,
+          "below": 0
+        },
+        "30pct": {
+          "at_or_above": 428,
+          "below": 2
+        },
+        "70pct": {
+          "at_or_above": 207,
+          "below": 223
+        }
+      },
+      "invalid": 0,
+      "scores": {
+        "max": 1.0,
+        "median": 0.6901408450704225,
+        "min": 0.23595505617977527
+      },
+      "valid": 430
+    },
+    "protein": {
+      "hits": {
+        "10pct": {
+          "below": 0,
+          "both": 430,
+          "effector": 430,
+          "either": 430,
+          "target": 430
+        },
+        "20pct": {
+          "below": 1,
+          "both": 410,
+          "effector": 422,
+          "either": 429,
+          "target": 417
+        },
+        "30pct": {
+          "below": 1,
+          "both": 409,
+          "effector": 422,
+          "either": 429,
+          "target": 416
+        },
+        "70pct": {
+          "below": 1,
+          "both": 409,
+          "effector": 422,
+          "either": 429,
+          "target": 416
+        }
+      },
+      "scores": {
+        "effector": {
+          "max": 1.0,
+          "median": 1.0,
+          "min": 0.14634146341463414
+        },
+        "row": {
+          "max": 1.0,
+          "median": 1.0,
+          "min": 0.16176470588235295
+        },
+        "target": {
+          "max": 1.0,
+          "median": 1.0,
+          "min": 0.13977566867989646
+        }
+      }
+    }
+  },
+  "ligand_method": {
+    "canonicalization": "RDKit canonical non-isomeric SMILES via src.processing.mol_utils.canonicalize_smiles",
+    "fingerprint": "Morgan",
+    "fp_size": 2048,
+    "library": "RDKit",
+    "radius": 2,
+    "similarity": "Tanimoto",
+    "thresholds": [
+      0.1,
+      0.2,
+      0.3,
+      0.7
+    ]
+  },
+  "protein_method": {
+    "extend_gap": -0.5,
+    "identity": "matches / alignment_columns",
+    "library": "Biopython PairwiseAligner",
+    "match": 2.0,
+    "mismatch": -1.0,
+    "mode": "global",
+    "open_gap": -10.0,
+    "thresholds": [
+      0.1,
+      0.2,
+      0.3,
+      0.7
+    ]
+  },
+  "rank": 1,
+  "train_ref_split": "GlueDegradDB split == train",
+  "val": {
+    "counts": {
+      "canonical_smiles": 192,
+      "effectors": 10,
+      "rows": 202,
+      "smiles": 192,
+      "targets": 17
+    },
+    "ligand": {
+      "exact": 0,
+      "hits": {
+        "10pct": {
+          "at_or_above": 202,
+          "below": 0
+        },
+        "20pct": {
+          "at_or_above": 186,
+          "below": 16
+        },
+        "30pct": {
+          "at_or_above": 61,
+          "below": 141
+        },
+        "70pct": {
+          "at_or_above": 0,
+          "below": 202
+        }
+      },
+      "invalid": 0,
+      "scores": {
+        "max": 0.5918367346938775,
+        "median": 0.2715167548500882,
+        "min": 0.14285714285714285
+      },
+      "valid": 202
+    },
+    "protein": {
+      "hits": {
+        "10pct": {
+          "below": 0,
+          "both": 202,
+          "effector": 202,
+          "either": 202,
+          "target": 202
+        },
+        "20pct": {
+          "below": 198,
+          "both": 0,
+          "effector": 0,
+          "either": 4,
+          "target": 4
+        },
+        "30pct": {
+          "below": 202,
+          "both": 0,
+          "effector": 0,
+          "either": 0,
+          "target": 0
+        },
+        "70pct": {
+          "below": 202,
+          "both": 0,
+          "effector": 0,
+          "either": 0,
+          "target": 0
+        }
+      },
+      "scores": {
+        "effector": {
+          "max": 0.1656534954407295,
+          "median": 0.14791403286978508,
+          "min": 0.11035267349260523
+        },
+        "row": {
+          "max": 0.2096128170894526,
+          "median": 0.14791403286978508,
+          "min": 0.11564625850340136
+        },
+        "target": {
+          "max": 0.2096128170894526,
+          "median": 0.14261884904086738,
+          "min": 0.11564625850340136
+        }
+      }
+    }
+  }
+}

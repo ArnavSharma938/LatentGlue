@@ -20,6 +20,7 @@ projection_cache
 .dgl
 .keras
 .deepmol_models
+3D_Print
 
 # Too large
 checkpoint/
