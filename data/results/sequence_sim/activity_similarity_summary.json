@@ -1,0 +1,14 @@
+{
+  "cdk2_crbn": {
+    "mean_ligand_tanimoto_to_train": 0.4533944127440032,
+    "target_sequence_identity_to_train": 0.4484848484848485
+  },
+  "overall": {
+    "mean_ligand_tanimoto_to_train": 0.3952596587046605,
+    "mean_target_sequence_identity_to_train": 0.30517089202289555
+  },
+  "wiz_crbn": {
+    "mean_ligand_tanimoto_to_train": 0.32912470915531666,
+    "target_sequence_identity_to_train": 0.14213483146067415
+  }
+}

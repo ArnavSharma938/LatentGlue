@@ -282,6 +282,29 @@ def build_report(train_ref_split, rank, val_df):
         "val": build_split_report(val_df),
     }
 
+def build_activity_summary(activity_annotated):
+    valid = activity_annotated[activity_annotated["ligand_valid"]]
+    wiz_mask = activity_annotated["Target"].astype(str) == "WIZ"
+    cdk2_mask = activity_annotated["Target"].astype(str) == "CDK2"
+    wiz_valid = activity_annotated[wiz_mask & activity_annotated["ligand_valid"]]
+    cdk2_valid = activity_annotated[cdk2_mask & activity_annotated["ligand_valid"]]
+    wiz_target_score = float(activity_annotated.loc[wiz_mask, "target_score"].iloc[0])
+    cdk2_target_score = float(activity_annotated.loc[cdk2_mask, "target_score"].iloc[0])
+    return {
+        "overall": {
+            "mean_ligand_tanimoto_to_train": float(valid["ligand_score"].mean()),
+            "mean_target_sequence_identity_to_train": float(activity_annotated["target_score"].mean()),
+        },
+        "wiz_crbn": {
+            "mean_ligand_tanimoto_to_train": float(wiz_valid["ligand_score"].mean()) if len(wiz_valid) > 0 else None,
+            "target_sequence_identity_to_train": wiz_target_score,
+        },
+        "cdk2_crbn": {
+            "mean_ligand_tanimoto_to_train": float(cdk2_valid["ligand_score"].mean()) if len(cdk2_valid) > 0 else None,
+            "target_sequence_identity_to_train": cdk2_target_score,
+        },
+    }
+
 def build_activity_report(train_ref_split, rank, activity_df):
     return {
         "rank": int(rank),
@@ -348,16 +371,26 @@ def main():
         with out_path.open("w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2, sort_keys=True)
         print(f"Wrote report to {out_path}")
+    activity_annotated_rank1 = None
     for rank, filename in (
         (1, "activity_nearest_train_neighbor_report.json"),
         (2, "activity_second_nearest_train_neighbor_report.json"),
     ):
         activity_annotated = annotate_activity(activity_df, activity_target_map, activity_ligand_map, rank)
+        if rank == 1:
+            activity_annotated_rank1 = activity_annotated
         report = build_activity_report("GlueDegradDB split == train", rank, activity_annotated)
         out_path = args.out_dir / filename
         with out_path.open("w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2, sort_keys=True)
         print(f"Wrote report to {out_path}")
+
+    summary = build_activity_summary(activity_annotated_rank1)
+    summary_path = args.out_dir / "activity_similarity_summary.json"
+    with summary_path.open("w", encoding="utf-8") as handle:
+        json.dump(summary, handle, indent=2, sort_keys=True)
+    print(f"Wrote activity summary to {summary_path}")
+    print(json.dumps(summary, indent=2))
 
 if __name__ == "__main__":
     main()
