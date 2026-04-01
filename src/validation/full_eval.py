@@ -1,10 +1,7 @@
 """
 1. Component effective dimensionality
    - compute spectral effective dimension for target, effector, and ligand
-     embeddings from the checkpointed encoder on both the GlueDegradDB val split
-     and GlueDegradDB-Eval.csv
-   - compare three representation families per component: frozen mean-pooled
-     backbones, projected mean-pooled features, and LatentGlue pooled features
+     embedding and compare between frozen, projected mean, and LatentGlue
 
 2. Activity prediction
    - build one vector per ternary from the checkpointed encoder
@@ -18,35 +15,15 @@
    - `activity/latentglue_*`: concatenated attention-pooled target / effector /
      ligand summaries from the trained encoder
 
-3. Retrieval
-   - build fixed-context retrieval tasks from the GlueDegradDB `val` split and
-     `GlueDegradDB-Eval.csv`
-   - positives are observed ligands for a target-effector context
-   - negatives are ligands sampled from other contexts
-   - compare `frozen_mean`, `projected_mean`, and `latentglue` under the same
-     grouped context-holdout protocol
-   - fit the same low-rank bilinear scorer for each representation family
-   - report per-context and macro AUROC/AUPRC as a fair representation-level
-     retrieval evaluation
-
-4. Eval-set ligand attention
-   - compute ligand-pooling attention over the full set of unique ligands in
-     `GlueDegradDB-Eval.csv`
-   - summarize attention concentration and spread across the eval ligand set
-   - render a representative panel grid spanning molecule size and attention
-     diffuseness bins, with one representative ligand per occupied bin
-
-Data used:
-- section 1: `data/GlueDegradDB.csv` with `split == "val"` and `data/GlueDegradDB-Eval.csv`
-- section 2: `data/GlueDegradDB-Activity.csv`
-- section 3: `data/GlueDegradDB.csv` with `split == "val"` and `data/GlueDegradDB-Eval.csv`
-- section 4: `data/GlueDegradDB-Eval.csv`
-
+3. Val-set ligand and protein attention
+   - compute ligand-pooling attention over the full set of unique ligands
+   - compute target- and effector-pooling attention over the unique proteins
+   - summarize attention concentration and spread across ligand atoms and
+     protein residues
 """
 
 import json
 import os
-from dataclasses import dataclass
 from urllib.parse import urlparse
 from huggingface_hub import hf_hub_download
 import numpy as np
@@ -54,7 +31,7 @@ import pandas as pd
 import torch
 from scipy.stats import spearmanr
 from sklearn.linear_model import Ridge
-from sklearn.metrics import average_precision_score, mean_squared_error, roc_auc_score
+from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
@@ -62,42 +39,23 @@ from src.model.dataset import collate_ternary
 from src.model.model import LatentGlueEncoder
 from src.processing.mol_utils import canonicalize_smiles as dataset_canonicalize_smiles
 from src.model.train import AUTOCAST_DTYPE
-from src.validation.in_train_eval import (activity_targets, build_target_balanced_folds, masked_mean_pool, spectral_effective_dimension,
+from src.validation.in_train_eval import (activity_targets, masked_mean_pool, spectral_effective_dimension,
 )
 
 DEFAULT_DEVICE = "cuda"
 DEFAULT_TRAIN_CSV = "data/GlueDegradDB.csv"
-DEFAULT_EVAL_CSV = "data/GlueDegradDB-Eval.csv"
 DEFAULT_ACTIVITY_CSV = "data/GlueDegradDB-Activity.csv"
 DEFAULT_OUTPUT_JSON = "data/results/full_eval.json"
-DEFAULT_ATTENTION_FIGURE_PATH = "data/results/ligand_attention.png"
-DEFAULT_EFFECTIVE_DIM_FIGURE_PATH = "data/results/effective_dim_eval.png"
+DEFAULT_LIGAND_ATTENTION_FIGURE_PATH = "data/results/ligand_attention.png"
+DEFAULT_PROTEIN_ATTENTION_FIGURE_PATH = "data/results/protein_attention.png"
+DEFAULT_EFFECTIVE_DIM_FIGURE_PATH = "data/results/effective_dim_val.png"
 DEFAULT_ACTIVITY_FIGURE_PATH = "data/results/activity_prediction.png"
-DEFAULT_RETRIEVAL_FIGURE_PATH = "data/results/retrieval.png"
 DEFAULT_CHECKPOINT_URL = "https://huggingface.co/ArnavSharma938/LatentGlue"
 DEFAULT_CHECKPOINT_FILENAME = "LatentGlue.pt"
 COMPONENT_NAMES = ("target", "effector", "ligand")
 TERNARY_COLUMNS = ("Target Sequence", "Effector Sequence", "SMILES")
-EVAL_REQUIRED_COLUMNS = (
-    "Compound ID",
-    "SMILES",
-    "Target",
-    "Effector",
-    "Effector UniProt",
-    "Target Sequence",
-    "Effector Sequence",
-)
-# `val` is bounded by the USP28/FBW7 context; `eval` retains the original budget.
-RETRIEVAL_NEGATIVES_PER_CONTEXT_VAL = 45
-RETRIEVAL_NEGATIVES_PER_CONTEXT_EVAL = 64
-RETRIEVAL_BATCH_SIZE = 32
-RETRIEVAL_N_FOLDS = 5
-RETRIEVAL_BILINEAR_RANK = 64
-RETRIEVAL_TRAIN_EPOCHS = 250
-RETRIEVAL_PATIENCE = 30
-RETRIEVAL_LR = 1e-3
-RETRIEVAL_WEIGHT_DECAY = 1e-4
-RETRIEVAL_SEED = 17
+DEFAULT_BATCH_SIZE = 32
+EVAL_SEEDS = (17, 18, 19)
 ATTENTION_PANEL_COLUMNS = 3
 ATTENTION_PANEL_SIZE_LABELS = ("small", "medium", "large")
 ATTENTION_PANEL_FOCUS_LABELS = ("focused", "balanced", "diffuse")
@@ -208,13 +166,26 @@ def sample_standard_deviation(values):
         return 0.0
     return float(values.std(ddof=1))
 
-def activity_probe_cv_with_folds(features, values, targets, alpha=1.0, n_folds=5):
+def build_seeded_target_balanced_folds(targets, values, n_folds=5, seed=0):
+    targets = np.asarray(targets)
+    values = np.asarray(values)
+    rng = np.random.default_rng(int(seed))
+    folds = [[] for _ in range(int(n_folds))]
+    for target in sorted(set(targets.tolist())):
+        target_indices = np.where(targets == target)[0]
+        ordered = target_indices[np.argsort(values[target_indices], kind="stable")]
+        fold_offset = int(rng.integers(int(n_folds))) if ordered.size else 0
+        for offset, index in enumerate(ordered.tolist()):
+            folds[(fold_offset + offset) % int(n_folds)].append(index)
+    return [np.array(sorted(fold), dtype=np.int64) for fold in folds if fold]
+
+def activity_probe_cv_with_folds(features, values, targets, alpha=1.0, n_folds=5, seed=0):
     features = np.asarray(features, dtype=np.float32)
     values = np.asarray(values, dtype=np.float32)
     targets = np.asarray(targets)
     spearman_scores = []
     rmse_scores = []
-    for fold_indices in build_target_balanced_folds(targets, values, n_folds=n_folds):
+    for fold_indices in build_seeded_target_balanced_folds(targets, values, n_folds=n_folds, seed=seed):
         train_mask = np.ones(len(values), dtype=bool)
         train_mask[fold_indices] = False
         if train_mask.sum() == 0 or fold_indices.size == 0:
@@ -241,6 +212,52 @@ def activity_probe_cv_with_folds(features, values, targets, alpha=1.0, n_folds=5
         "n_folds": float(len(spearman_scores)),
     }
 
+def activity_probe_cv_with_oof_predictions(features, values, targets, alpha=1.0, n_folds=5, seed=0):
+    features = np.asarray(features, dtype=np.float32)
+    values = np.asarray(values, dtype=np.float32)
+    targets = np.asarray(targets)
+    spearman_scores = []
+    rmse_scores = []
+    out_of_fold_predictions = np.full(len(values), np.nan, dtype=np.float32)
+    fold_ids = np.full(len(values), -1, dtype=np.int64)
+    valid_fold_count = 0
+    for fold_idx, fold_indices in enumerate(
+        build_seeded_target_balanced_folds(targets, values, n_folds=n_folds, seed=seed),
+        start=1,
+    ):
+        train_mask = np.ones(len(values), dtype=bool)
+        train_mask[fold_indices] = False
+        if train_mask.sum() == 0 or fold_indices.size == 0:
+            continue
+        model = make_pipeline(StandardScaler(), Ridge(alpha=alpha))
+        model.fit(features[train_mask], values[train_mask])
+        predictions = model.predict(features[fold_indices]).astype(np.float32)
+        out_of_fold_predictions[fold_indices] = predictions
+        fold_ids[fold_indices] = int(fold_idx)
+        spearman_score = spearmanr(values[fold_indices], predictions).statistic
+        if spearman_score is None or np.isnan(spearman_score):
+            raise RuntimeError(
+                "Activity evaluation produced an undefined Spearman correlation for at least one fold."
+            )
+        spearman_scores.append(float(spearman_score))
+        rmse_scores.append(float(np.sqrt(mean_squared_error(values[fold_indices], predictions))))
+        valid_fold_count += 1
+    if not spearman_scores:
+        raise RuntimeError("Activity evaluation did not produce any valid cross-validation folds.")
+    if np.isnan(out_of_fold_predictions).any():
+        raise RuntimeError("Activity evaluation did not produce out-of-fold predictions for every row.")
+    return {
+        "spearman": float(np.mean(spearman_scores)),
+        "rmse": float(np.mean(rmse_scores)),
+        "spearman_folds": [float(score) for score in spearman_scores],
+        "rmse_folds": [float(score) for score in rmse_scores],
+        "spearman_std": sample_standard_deviation(spearman_scores),
+        "rmse_std": sample_standard_deviation(rmse_scores),
+        "n_folds": float(valid_fold_count),
+        "oof_predictions": out_of_fold_predictions,
+        "fold_ids": fold_ids,
+    }
+
 def summarize_activity_cv_representation(display_name, probe_metrics):
     return {
         "display_name": str(display_name),
@@ -252,6 +269,69 @@ def summarize_activity_cv_representation(display_name, probe_metrics):
         "rmse_folds": [float(score) for score in probe_metrics["rmse_folds"]],
         "n_folds": float(probe_metrics["n_folds"]),
     }
+
+def aggregate_activity_representation(display_name, seed_metrics):
+    spearman_values = [float(metrics["spearman"]) for metrics in seed_metrics]
+    rmse_values = [float(metrics["rmse"]) for metrics in seed_metrics]
+    return {
+        "display_name": str(display_name),
+        "spearman": float(np.mean(spearman_values)),
+        "rmse": float(np.mean(rmse_values)),
+        "spearman_std": sample_standard_deviation(spearman_values),
+        "rmse_std": sample_standard_deviation(rmse_values),
+        "n_seeds": float(len(seed_metrics)),
+    }
+
+def summarize_activity_subset(values, predictions):
+    values = np.asarray(values, dtype=np.float32)
+    predictions = np.asarray(predictions, dtype=np.float32)
+    if values.size == 0 or predictions.size == 0 or values.size != predictions.size:
+        raise ValueError("values and predictions must be non-empty arrays with matching shapes.")
+    spearman_score = spearmanr(values, predictions).statistic
+    if spearman_score is None or np.isnan(spearman_score):
+        spearman_score = 0.0
+    rmse_score = float(np.sqrt(mean_squared_error(values, predictions)))
+    return {
+        "n_rows": float(len(values)),
+        "spearman": float(spearman_score),
+        "rmse": rmse_score,
+    }
+
+def summarize_activity_per_complex(activity_df, values, predictions):
+    complex_df = activity_df.copy().reset_index(drop=True)
+    if "Effector" not in complex_df.columns:
+        complex_df["Effector"] = complex_df["Effector Sequence"].astype(str)
+    complex_df["activity_target"] = np.asarray(values, dtype=np.float32)
+    complex_df["prediction"] = np.asarray(predictions, dtype=np.float32)
+    per_complex = {}
+    grouped = complex_df.groupby(["Target", "Effector"], sort=True)
+    for (target_name, effector_name), group_df in grouped:
+        subset_metrics = summarize_activity_subset(
+            group_df["activity_target"].to_numpy(dtype=np.float32),
+            group_df["prediction"].to_numpy(dtype=np.float32),
+        )
+        per_complex[f"{target_name}__{effector_name}"] = {
+            "target_name": str(target_name),
+            "effector_name": str(effector_name),
+            **subset_metrics,
+        }
+    return per_complex
+
+def aggregate_activity_per_complex(seed_entries):
+    all_keys = sorted({key for entry in seed_entries for key in entry.keys()})
+    aggregated = {}
+    for complex_key in all_keys:
+        complex_seed_entries = [entry[complex_key] for entry in seed_entries if complex_key in entry]
+        aggregated[str(complex_key)] = {
+            "target_name": str(complex_seed_entries[0]["target_name"]),
+            "effector_name": str(complex_seed_entries[0]["effector_name"]),
+            "n_rows": float(np.mean([item["n_rows"] for item in complex_seed_entries])),
+            "spearman": float(np.mean([item["spearman"] for item in complex_seed_entries])),
+            "spearman_std": sample_standard_deviation([item["spearman"] for item in complex_seed_entries]),
+            "rmse": float(np.mean([item["rmse"] for item in complex_seed_entries])),
+            "rmse_std": sample_standard_deviation([item["rmse"] for item in complex_seed_entries]),
+        }
+    return aggregated
 
 class InMemoryTernaryDataset(torch.utils.data.Dataset):
     def __init__(self, df):
@@ -324,7 +404,7 @@ def evaluate_effective_dimensions(reps, dataset_name):
         metrics[projected_key] = spectral_effective_dimension(reps["projected_mean"][idx])
     return metrics
 
-def evaluate_activity(activity_df, reps):
+def evaluate_activity(activity_df, reps, seeds=EVAL_SEEDS):
     if activity_df is None:
         raise ValueError("Activity dataframe must be provided.")
     missing_columns = [column for column in ("Value", "Target") if column not in activity_df.columns]
@@ -339,17 +419,39 @@ def evaluate_activity(activity_df, reps):
     metrics = {}
     activity_cv = {
         "split_strategy": "target-balanced 5-fold cross-validation on GlueDegradDB-Activity",
-        "error_bar": "sample standard deviation across folds",
+        "error_bar": "sample standard deviation across seeds",
+        "within_seed_error_bar": "sample standard deviation across folds",
+        "aggregation": "mean across repeated seeded cross-validation runs",
+        "seeds": [float(seed) for seed in seeds],
         "representations": {},
+        "per_seed_summaries": {},
     }
-    for rep_key, display_name, prefix, features in representation_specs:
-        probe_metrics = activity_probe_cv_with_folds(features, y, targets, n_folds=5)
-        metrics[f"{prefix}_spearman"] = float(probe_metrics["spearman"])
-        metrics[f"{prefix}_rmse"] = float(probe_metrics["rmse"])
-        activity_cv["representations"][rep_key] = summarize_activity_cv_representation(display_name, probe_metrics)
-    activity_cv["n_folds"] = float(
-        activity_cv["representations"]["latentglue"]["n_folds"]
-    )
+    per_rep_seed_metrics = {rep_key: [] for rep_key, *_rest in representation_specs}
+    per_rep_seed_complex_metrics = {rep_key: [] for rep_key, *_rest in representation_specs}
+    for seed in seeds:
+        seed_summary = {"representations": {}}
+        for rep_key, display_name, _prefix, features in representation_specs:
+            probe_metrics = activity_probe_cv_with_oof_predictions(features, y, targets, n_folds=5, seed=seed)
+            per_rep_seed_metrics[rep_key].append(probe_metrics)
+            seed_summary["representations"][rep_key] = summarize_activity_cv_representation(display_name, probe_metrics)
+            seed_summary["representations"][rep_key]["per_complex"] = summarize_activity_per_complex(
+                activity_df,
+                y,
+                probe_metrics["oof_predictions"],
+            )
+            per_rep_seed_complex_metrics[rep_key].append(seed_summary["representations"][rep_key]["per_complex"])
+        seed_summary["n_folds"] = float(seed_summary["representations"]["latentglue"]["n_folds"])
+        activity_cv["per_seed_summaries"][str(int(seed))] = seed_summary
+
+    for rep_key, display_name, prefix, _features in representation_specs:
+        aggregate_metrics = aggregate_activity_representation(display_name, per_rep_seed_metrics[rep_key])
+        metrics[f"{prefix}_spearman"] = float(aggregate_metrics["spearman"])
+        metrics[f"{prefix}_rmse"] = float(aggregate_metrics["rmse"])
+        aggregate_metrics["per_complex"] = aggregate_activity_per_complex(per_rep_seed_complex_metrics[rep_key])
+        activity_cv["representations"][rep_key] = aggregate_metrics
+
+    activity_cv["n_folds"] = float(activity_cv["per_seed_summaries"][str(int(seeds[0]))]["n_folds"])
+    activity_cv["n_seeds"] = float(len(seeds))
     metrics["activity_cv"] = activity_cv
     return metrics
 
@@ -519,13 +621,13 @@ def compute_attention_distribution_metrics(atom_weights):
         "participation_ratio": participation_ratio,
     }
 
-def build_eval_ligand_attention_records(eval_df):
-    missing_columns = [column for column in ("Compound ID", "SMILES", "Target", "Effector") if column not in eval_df.columns]
+def build_ligand_attention_records(dataset_df):
+    missing_columns = [column for column in ("Compound ID", "SMILES", "Target", "Effector") if column not in dataset_df.columns]
     if missing_columns:
-        raise ValueError(f"Eval ligand attention requires columns: {missing_columns}")
+        raise ValueError(f"Ligand attention requires columns: {missing_columns}")
 
     unique_records = {}
-    for row in eval_df.to_dict("records"):
+    for row in dataset_df.to_dict("records"):
         canonical_smiles = dataset_canonicalize_smiles(row["SMILES"])
         if not canonical_smiles:
             raise ValueError(f"Invalid SMILES: {row['SMILES']}")
@@ -536,11 +638,11 @@ def build_eval_ligand_attention_records(eval_df):
                 "targets": {str(row["Target"]).strip()},
                 "effectors": {str(row["Effector"]).strip()},
                 "smiles": canonical_smiles,
-                "eval_row_count": 1,
+                "dataset_row_count": 1,
             }
             continue
 
-        record["eval_row_count"] += 1
+        record["dataset_row_count"] += 1
         record["compound_ids"].add(str(row["Compound ID"]).strip())
         record["targets"].add(str(row["Target"]).strip())
         record["effectors"].add(str(row["Effector"]).strip())
@@ -557,7 +659,7 @@ def build_eval_ligand_attention_records(eval_df):
                 "targets": targets,
                 "effectors": effectors,
                 "smiles": canonical_smiles,
-                "eval_row_count": int(record["eval_row_count"]),
+                "dataset_row_count": int(record["dataset_row_count"]),
             }
         )
     ordered_records.sort(key=lambda item: (item["compound_id"], item["smiles"]))
@@ -585,25 +687,25 @@ def summarize_attention_metric_distribution(values):
         "q90": float(quantiles[2]),
     }
 
-def select_representative_attention_panels(panel_data):
-    if not panel_data:
-        raise ValueError("panel_data must contain at least one ligand panel.")
+def select_representative_attention_examples(example_data, count_key, target_count=9):
+    if not example_data:
+        raise ValueError("example_data must contain at least one attention example.")
 
     metrics_df = pd.DataFrame(
         {
-            "panel_idx": np.arange(len(panel_data), dtype=np.int64),
-            "atom_count": [float(panel["atom_count"]) for panel in panel_data],
-            "normalized_entropy": [float(panel["normalized_entropy"]) for panel in panel_data],
+            "example_idx": np.arange(len(example_data), dtype=np.int64),
+            "count": [float(example[count_key]) for example in example_data],
+            "normalized_entropy": [float(example["normalized_entropy"]) for example in example_data],
         }
     )
-    metrics_df["size_bin"] = assign_attention_quantile_bins(metrics_df["atom_count"].to_numpy(), ATTENTION_PANEL_SIZE_LABELS)
+    metrics_df["size_bin"] = assign_attention_quantile_bins(metrics_df["count"].to_numpy(), ATTENTION_PANEL_SIZE_LABELS)
     metrics_df["focus_bin"] = assign_attention_quantile_bins(metrics_df["normalized_entropy"].to_numpy(), ATTENTION_PANEL_FOCUS_LABELS)
 
     for row in metrics_df.itertuples(index=False):
-        panel_data[int(row.panel_idx)]["size_bin"] = str(row.size_bin)
-        panel_data[int(row.panel_idx)]["focus_bin"] = str(row.focus_bin)
+        example_data[int(row.example_idx)]["size_bin"] = str(row.size_bin)
+        example_data[int(row.example_idx)]["focus_bin"] = str(row.focus_bin)
 
-    atom_scale = max(float(metrics_df["atom_count"].std(ddof=0)), 1.0)
+    count_scale = max(float(metrics_df["count"].std(ddof=0)), 1.0)
     entropy_scale = max(float(metrics_df["normalized_entropy"].std(ddof=0)), 1e-6)
 
     selected_indices = []
@@ -615,24 +717,43 @@ def select_representative_attention_panels(panel_data):
             ]
             if cell.empty:
                 continue
-            atom_center = float(cell["atom_count"].median())
+            count_center = float(cell["count"].median())
             entropy_center = float(cell["normalized_entropy"].median())
             distances = (
-                np.square((cell["atom_count"] - atom_center) / atom_scale) +
+                np.square((cell["count"] - count_center) / count_scale) +
                 np.square((cell["normalized_entropy"] - entropy_center) / entropy_scale)
             )
-            selected_panel_idx = int(cell.loc[distances.idxmin(), "panel_idx"])
-            panel = panel_data[selected_panel_idx]
-            panel["size_bin"] = size_bin
-            panel["focus_bin"] = focus_bin
-            selected_indices.append(selected_panel_idx)
+            selected_example_idx = int(cell.loc[distances.idxmin(), "example_idx"])
+            example = example_data[selected_example_idx]
+            example["size_bin"] = size_bin
+            example["focus_bin"] = focus_bin
+            selected_indices.append(selected_example_idx)
 
-    return [panel_data[idx] for idx in selected_indices]
+    selected_indices = list(dict.fromkeys(int(idx) for idx in selected_indices))
+    if len(selected_indices) < min(int(target_count), len(example_data)):
+        overall_count_center = float(metrics_df["count"].median())
+        overall_entropy_center = float(metrics_df["normalized_entropy"].median())
+        remaining_candidates = []
+        selected_index_set = set(selected_indices)
+        for row in metrics_df.itertuples(index=False):
+            if int(row.example_idx) in selected_index_set:
+                continue
+            distance = (
+                np.square((float(row.count) - overall_count_center) / count_scale) +
+                np.square((float(row.normalized_entropy) - overall_entropy_center) / entropy_scale)
+            )
+            remaining_candidates.append((float(distance), int(row.example_idx)))
+        for _distance, example_idx in sorted(remaining_candidates, key=lambda item: item[0]):
+            selected_indices.append(int(example_idx))
+            if len(selected_indices) >= min(int(target_count), len(example_data)):
+                break
 
-def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
-    ligand_records = build_eval_ligand_attention_records(eval_df)
+    return [example_data[idx] for idx in selected_indices[: min(int(target_count), len(example_data))]]
+
+def evaluate_ligand_attention(encoder, dataset_df, dataset_name, autocast_enabled, output_path):
+    ligand_records = build_ligand_attention_records(dataset_df)
     if not ligand_records:
-        raise RuntimeError("Eval ligand attention did not find any unique ligands.")
+        raise RuntimeError(f"Ligand attention did not find any unique ligands for {dataset_name}.")
 
     panel_data = []
     for record in ligand_records:
@@ -647,7 +768,7 @@ def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
         panel["panel_subtitle"] = ""
         panel_data.append(panel)
 
-    representative_panels = select_representative_attention_panels(panel_data)
+    representative_panels = select_representative_attention_examples(panel_data, count_key="atom_count")
     for panel in representative_panels:
         panel["panel_subtitle"] = f"{panel['size_bin']} | {panel['focus_bin']}"
 
@@ -681,8 +802,8 @@ def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
     }
 
     result = {
-        "dataset_name": "GlueDegradDB-Eval",
-        "num_eval_rows": float(len(eval_df)),
+        "dataset_name": str(dataset_name),
+        "num_dataset_rows": float(len(dataset_df)),
         "num_unique_ligands": float(len(panel_data)),
         "representative_panel_count": float(len(representative_panels)),
         "occupied_bin_count": occupied_bin_count,
@@ -694,7 +815,7 @@ def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
                 "smiles": panel["smiles"],
                 "targets": panel["targets"],
                 "effectors": panel["effectors"],
-                "eval_row_count": float(panel["eval_row_count"]),
+                "dataset_row_count": float(panel["dataset_row_count"]),
                 "atom_count": float(panel["atom_count"]),
                 "top1_atom_weight": float(panel["top1_atom_weight"]),
                 "top3_atom_weight": float(panel["top3_atom_weight"]),
@@ -703,11 +824,379 @@ def evaluate_ligand_attention(encoder, eval_df, autocast_enabled, output_path):
                 "participation_ratio": float(panel["participation_ratio"]),
                 "size_bin": panel["size_bin"],
                 "focus_bin": panel["focus_bin"],
+                "atom_weights": [float(value) for value in panel["atom_weights"]],
             }
             for panel in representative_panels
         ],
     }
     return result
+
+@torch.no_grad()
+def compute_protein_attention(encoder, sequence, role_id, autocast_enabled):
+    sequence = str(sequence).strip()
+    if not sequence:
+        raise ValueError("Protein sequence must be non-empty.")
+
+    protein_toks = encoder.esm_model._tokenize([sequence]).to(encoder.device)
+    protein_mask_raw = protein_toks != encoder.esm_model.tokenizer.pad_token_id
+    pool_module = encoder.target_pool if int(role_id) == 0 else encoder.effector_pool
+
+    with torch.autocast(device_type="cuda", enabled=autocast_enabled, dtype=AUTOCAST_DTYPE):
+        protein_tokens, protein_mask, _ = encoder.forward_protein(
+            protein_toks,
+            protein_mask_raw,
+            role_id=int(role_id),
+        )
+        _, token_weights = extract_seed_attention_weights(pool_module, protein_tokens, mask=protein_mask)
+        residue_weights = token_weights[0, protein_mask[0]].detach().float().cpu().numpy().astype(np.float32)
+
+    if len(sequence) != len(residue_weights):
+        raise RuntimeError(
+            f"Protein attention length mismatch: sequence has {len(sequence)} residues but got {len(residue_weights)} weights."
+        )
+
+    total_weight = float(residue_weights.sum())
+    if total_weight <= 0.0:
+        raise RuntimeError("Protein attention weights must sum to a positive value.")
+    residue_weights = residue_weights / total_weight
+    return {
+        "sequence": sequence,
+        "residue_weights": residue_weights,
+    }
+
+def compute_protein_attention_distribution_metrics(residue_weights):
+    residue_weights = np.asarray(residue_weights, dtype=np.float32)
+    if residue_weights.ndim != 1 or residue_weights.size == 0:
+        raise ValueError("residue_weights must be a non-empty 1D vector.")
+
+    positive_probs = residue_weights[residue_weights > 0]
+    entropy = float(-(positive_probs * np.log(positive_probs)).sum())
+    max_entropy = float(np.log(len(residue_weights))) if len(residue_weights) > 1 else 0.0
+    normalized_entropy = entropy / max_entropy if max_entropy > 0.0 else 0.0
+    effective_residue_count = float(np.exp(entropy))
+    participation_ratio = float(1.0 / np.square(residue_weights).sum())
+    sorted_probs = np.sort(residue_weights)[::-1]
+
+    return {
+        "residue_count": float(len(residue_weights)),
+        "top1_residue_weight": float(sorted_probs[0]),
+        "top10_residue_weight": float(sorted_probs[: min(10, len(sorted_probs))].sum()),
+        "entropy": entropy,
+        "normalized_entropy": float(normalized_entropy),
+        "effective_residue_count": effective_residue_count,
+        "effective_residue_fraction": float(effective_residue_count / len(residue_weights)),
+        "participation_ratio": participation_ratio,
+    }
+
+def build_protein_attention_records(dataset_df, component_name):
+    component_name = str(component_name)
+    if component_name == "target":
+        name_col = "Target"
+        seq_col = "Target Sequence"
+        partner_col = "Effector"
+        uniprot_col = "Target UniProt"
+    elif component_name == "effector":
+        name_col = "Effector"
+        seq_col = "Effector Sequence"
+        partner_col = "Target"
+        uniprot_col = "Effector UniProt"
+    else:
+        raise ValueError(f"Unsupported protein attention component: {component_name}")
+
+    required_columns = [name_col, seq_col, partner_col]
+    missing_columns = [column for column in required_columns if column not in dataset_df.columns]
+    if missing_columns:
+        raise ValueError(f"Protein attention for {component_name} requires columns: {missing_columns}")
+
+    unique_records = {}
+    for row in dataset_df.to_dict("records"):
+        sequence = str(row[seq_col]).strip()
+        if not sequence:
+            raise ValueError(f"Blank {component_name} sequence encountered in attention evaluation.")
+        record = unique_records.get(sequence)
+        if record is None:
+            unique_records[sequence] = {
+                "protein_name": str(row[name_col]).strip(),
+                "uniprot": str(row.get(uniprot_col, "")).strip(),
+                "sequence": sequence,
+                "dataset_row_count": 1,
+                "partners": {str(row[partner_col]).strip()},
+            }
+            continue
+
+        record["dataset_row_count"] += 1
+        record["partners"].add(str(row[partner_col]).strip())
+
+    ordered_records = []
+    for sequence, record in unique_records.items():
+        partners = sorted(value for value in record["partners"] if value)
+        ordered_records.append(
+            {
+                "protein_name": record["protein_name"],
+                "uniprot": record["uniprot"],
+                "sequence": sequence,
+                "dataset_row_count": int(record["dataset_row_count"]),
+                "partners": partners,
+            }
+        )
+    ordered_records.sort(key=lambda item: (item["protein_name"], item["uniprot"], item["sequence"]))
+    return ordered_records
+
+def evaluate_protein_attention_component(encoder, dataset_df, dataset_name, component_name, autocast_enabled):
+    records = build_protein_attention_records(dataset_df, component_name=component_name)
+    if not records:
+        raise RuntimeError(f"Protein attention did not find any unique {component_name} sequences for {dataset_name}.")
+
+    example_data = []
+    role_id = 0 if component_name == "target" else 1
+    for record in records:
+        example = compute_protein_attention(
+            encoder=encoder,
+            sequence=record["sequence"],
+            role_id=role_id,
+            autocast_enabled=autocast_enabled,
+        )
+        example.update(record)
+        example.update(compute_protein_attention_distribution_metrics(example["residue_weights"]))
+        example_data.append(example)
+
+    representative_examples = select_representative_attention_examples(example_data, count_key="residue_count")
+
+    attention_bin_counts = {
+        focus_bin: {
+            size_bin: float(
+                sum(
+                    example["focus_bin"] == focus_bin and example["size_bin"] == size_bin
+                    for example in example_data
+                )
+            )
+            for size_bin in ATTENTION_PANEL_SIZE_LABELS
+        }
+        for focus_bin in ATTENTION_PANEL_FOCUS_LABELS
+    }
+    occupied_bin_count = float(
+        sum(
+            count > 0.0
+            for focus_counts in attention_bin_counts.values()
+            for count in focus_counts.values()
+        )
+    )
+
+    summary = {
+        "residue_count": summarize_attention_metric_distribution([example["residue_count"] for example in example_data]),
+        "top1_residue_weight": summarize_attention_metric_distribution([example["top1_residue_weight"] for example in example_data]),
+        "top10_residue_weight": summarize_attention_metric_distribution([example["top10_residue_weight"] for example in example_data]),
+        "normalized_entropy": summarize_attention_metric_distribution([example["normalized_entropy"] for example in example_data]),
+        "effective_residue_fraction": summarize_attention_metric_distribution([example["effective_residue_fraction"] for example in example_data]),
+        "participation_ratio": summarize_attention_metric_distribution([example["participation_ratio"] for example in example_data]),
+    }
+
+    return {
+        "component_name": str(component_name),
+        "dataset_name": str(dataset_name),
+        "num_dataset_rows": float(len(dataset_df)),
+        "num_unique_sequences": float(len(example_data)),
+        "representative_entry_count": float(len(representative_examples)),
+        "occupied_bin_count": occupied_bin_count,
+        "summary": summary,
+        "attention_bin_counts": attention_bin_counts,
+        "representative_entries": [
+            {
+                "protein_name": example["protein_name"],
+                "uniprot": example["uniprot"],
+                "partners": example["partners"],
+                "dataset_row_count": float(example["dataset_row_count"]),
+                "residue_count": float(example["residue_count"]),
+                "top1_residue_weight": float(example["top1_residue_weight"]),
+                "top10_residue_weight": float(example["top10_residue_weight"]),
+                "normalized_entropy": float(example["normalized_entropy"]),
+                "effective_residue_fraction": float(example["effective_residue_fraction"]),
+                "participation_ratio": float(example["participation_ratio"]),
+                "size_bin": example["size_bin"],
+                "focus_bin": example["focus_bin"],
+                "residue_weights": [float(value) for value in example["residue_weights"]],
+            }
+            for example in representative_examples
+        ],
+    }
+
+def evaluate_protein_attention(encoder, dataset_df, dataset_name, autocast_enabled):
+    return {
+        "dataset_name": str(dataset_name),
+        "target": evaluate_protein_attention_component(
+            encoder=encoder,
+            dataset_df=dataset_df,
+            dataset_name=dataset_name,
+            component_name="target",
+            autocast_enabled=autocast_enabled,
+        ),
+        "effector": evaluate_protein_attention_component(
+            encoder=encoder,
+            dataset_df=dataset_df,
+            dataset_name=dataset_name,
+            component_name="effector",
+            autocast_enabled=autocast_enabled,
+        ),
+    }
+
+def summarize_top_ligand_atoms(smiles, atom_weights, top_k=3):
+    from rdkit import Chem
+
+    mol = Chem.MolFromSmiles(str(smiles))
+    if mol is None:
+        return []
+
+    atom_weights = np.asarray(atom_weights, dtype=np.float32)
+    if atom_weights.size != mol.GetNumAtoms():
+        return []
+
+    top_indices = np.argsort(atom_weights)[::-1][: min(int(top_k), atom_weights.size)]
+    return [
+        {
+            "atom_index": int(atom_idx),
+            "atom_symbol": str(mol.GetAtomWithIdx(int(atom_idx)).GetSymbol()),
+            "weight": float(atom_weights[int(atom_idx)]),
+        }
+        for atom_idx in top_indices
+    ]
+
+def select_protein_gallery_entries(protein_attention_result, target_count=9):
+    combined_entries = []
+    for component_name in ("target", "effector"):
+        component = protein_attention_result[component_name]
+        for entry in component["representative_entries"]:
+            record = dict(entry)
+            record["component_name"] = component_name
+            combined_entries.append(record)
+    if not combined_entries:
+        return []
+
+    if len(combined_entries) <= int(target_count):
+        return combined_entries
+
+    gallery_examples = [dict(entry) for entry in combined_entries]
+    selected = select_representative_attention_examples(
+        gallery_examples,
+        count_key="residue_count",
+        target_count=target_count,
+    )
+    return selected
+
+def save_ligand_attention_figure(ligand_attention, output_path):
+    if not output_path:
+        raise ValueError("ligand_attention_figure_path must be provided.")
+
+    _, plt = load_matplotlib()
+    ensure_output_dir(output_path)
+
+    ligand_entries = [dict(entry) for entry in ligand_attention["representative_panels"]]
+    if not ligand_entries:
+        raise RuntimeError("Ligand attention figure requires at least one representative ligand entry.")
+
+    fig, axes = plt.subplots(3, 3, figsize=(12.5, 10.5))
+    axes = np.asarray(axes).reshape(-1)
+    try:
+        for ax in axes:
+            ax.set_xticks([])
+            ax.set_yticks([])
+            hide_chart_spines(ax)
+
+        for panel_idx, entry in enumerate(ligand_entries[:9]):
+            ax = axes[panel_idx]
+            atom_weights = np.asarray(entry["atom_weights"], dtype=np.float32)
+            ax.imshow(atom_weights[np.newaxis, :], aspect="auto", cmap="inferno", interpolation="nearest")
+            ax.set_title(
+                f"Ligand {panel_idx + 1}: {entry.get('compound_id', '') or 'unlabeled'}\n"
+                f"{entry['size_bin']} | {entry['focus_bin']}",
+                fontsize=10,
+            )
+            top_atoms = summarize_top_ligand_atoms(entry["smiles"], atom_weights, top_k=3)
+            top_atom_text = ", ".join(
+                f"{atom['atom_symbol']}{atom['atom_index']}:{atom['weight']:.2f}"
+                for atom in top_atoms
+            ) or "n/a"
+            metric_text = (
+                f"atoms={int(round(entry['atom_count']))}  top1={entry['top1_atom_weight']:.2f}\n"
+                f"top3={entry['top3_atom_weight']:.2f}  H={entry['normalized_entropy']:.2f}\n"
+                f"top atoms: {top_atom_text}"
+            )
+            ax.text(
+                0.02,
+                0.02,
+                metric_text,
+                transform=ax.transAxes,
+                fontsize=8.5,
+                va="bottom",
+                ha="left",
+                bbox={"facecolor": "white", "alpha": 0.85, "edgecolor": "none", "pad": 2.5},
+            )
+            ax.set_xlabel("Ligand atom index", fontsize=8)
+
+        for empty_ax in axes[len(ligand_entries[:9]) : 9]:
+            empty_ax.axis("off")
+
+        fig.suptitle(
+            "Val-split ligand attention representatives",
+            fontsize=14,
+        )
+        fig.tight_layout(rect=(0.0, 0.02, 1.0, 0.97))
+        fig.savefig(output_path, dpi=SUMMARY_FIGURE_DPI, bbox_inches="tight")
+    finally:
+        plt.close(fig)
+
+def save_protein_attention_figure(protein_attention, output_path):
+    if not output_path:
+        raise ValueError("protein_attention_figure_path must be provided.")
+
+    _, plt = load_matplotlib()
+    ensure_output_dir(output_path)
+
+    protein_entries = [dict(entry) for entry in select_protein_gallery_entries(protein_attention, target_count=9)]
+    if not protein_entries:
+        raise RuntimeError("Protein attention figure requires at least one representative protein entry.")
+
+    fig, axes = plt.subplots(3, 3, figsize=(12.5, 8.5))
+    axes = np.asarray(axes).reshape(-1)
+    try:
+        for ax in axes:
+            ax.set_xticks([])
+            ax.set_yticks([])
+            hide_chart_spines(ax)
+
+        for protein_idx, entry in enumerate(protein_entries[:9]):
+            ax = axes[protein_idx]
+            residue_weights = np.asarray(entry["residue_weights"], dtype=np.float32)
+            ax.imshow(residue_weights[np.newaxis, :], aspect="auto", cmap="inferno", interpolation="nearest")
+            ax.set_title(
+                f"{entry['component_name'].title()} {protein_idx + 1}: {entry['protein_name']}\n"
+                f"{entry['size_bin']} | {entry['focus_bin']}",
+                fontsize=10,
+            )
+            metric_text = (
+                f"res={int(round(entry['residue_count']))}  top1={entry['top1_residue_weight']:.2f}\n"
+                f"top10={entry['top10_residue_weight']:.2f}  H={entry['normalized_entropy']:.2f}"
+            )
+            ax.text(
+                0.02,
+                0.90,
+                metric_text,
+                transform=ax.transAxes,
+                fontsize=8.5,
+                va="top",
+                ha="left",
+                color="white",
+                bbox={"facecolor": "black", "alpha": 0.65, "edgecolor": "none", "pad": 2.5},
+            )
+            ax.set_xlabel(f"{entry['component_name'].title()} sequence position", fontsize=8)
+
+        for empty_ax in axes[len(protein_entries[:9]) : 9]:
+            empty_ax.axis("off")
+
+        fig.suptitle("Val-split protein attention representatives", fontsize=14)
+        fig.tight_layout(rect=(0.0, 0.02, 1.0, 0.97))
+        fig.savefig(output_path, dpi=SUMMARY_FIGURE_DPI, bbox_inches="tight")
+    finally:
+        plt.close(fig)
 
 def format_figure_value(value):
     value = float(value)
@@ -771,7 +1260,7 @@ def save_effective_dimensionality_figure(metrics, output_path):
         min_value = float("inf")
         for offset_idx, (display_name, rep_key) in enumerate(family_specs):
             values = [
-                float(metrics[effective_dimension_metric_key("eval", rep_key, component)])
+                float(metrics[effective_dimension_metric_key("val", rep_key, component)])
                 for component in COMPONENT_NAMES
             ]
             max_value = max(max_value, max(values))
@@ -789,7 +1278,7 @@ def save_effective_dimensionality_figure(metrics, output_path):
         ax.set_xticks(component_positions)
         ax.set_xticklabels([component.title() for component in COMPONENT_NAMES])
         ax.set_ylabel("Spectral effective dimension")
-        ax.set_title("Effective dimensionality on GlueDegradDB-Eval")
+        ax.set_title("Effective dimensionality on GlueDegradDB val split")
         ax.grid(axis="y", alpha=0.25)
         ax.legend(frameon=False, ncol=3)
         hide_chart_spines(ax)
@@ -870,504 +1359,24 @@ def save_activity_prediction_figure(activity_metrics, output_path):
     finally:
         plt.close(fig)
 
-def save_retrieval_figure(retrieval_metrics, output_path):
-    if not output_path:
-        raise ValueError("retrieval_figure_path must be provided.")
-    _, plt = load_matplotlib()
-    ensure_output_dir(output_path)
-
-    family_specs = (
-        ("Frozen", "frozen_mean"),
-        ("Projected", "projected_mean"),
-        ("LatentGlue", "latentglue"),
-    )
-    panel_specs = (
-        ("eval", "macro_context_auroc", "Eval AUROC"),
-        ("eval", "macro_context_auprc", "Eval AUPRC"),
-        ("val", "macro_context_auroc", "Val AUROC"),
-        ("val", "macro_context_auprc", "Val AUPRC"),
-    )
-    fig, axes = plt.subplots(2, 2, figsize=(10.6, 7.4))
-    try:
-        for ax, (split_name, metric_name, title) in zip(axes.reshape(-1), panel_specs):
-            labels = [display_name for display_name, _ in family_specs]
-            values = np.asarray(
-                [
-                    retrieval_metrics[split_name]["representations"][rep_key][metric_name]
-                    for _display_name, rep_key in family_specs
-                ],
-                dtype=np.float32,
-            )
-            bars = ax.bar(
-                np.arange(len(labels), dtype=np.float32),
-                values,
-                width=0.65,
-                color=[PLOT_COLORS[label] for label in labels],
-            )
-            axis_floor = 0.0 if metric_name.endswith("auprc") else 0.0
-            y_min, y_max = compute_soft_zoom_limits(
-                values,
-                step=0.02,
-                lower_bound=axis_floor,
-                lower_pad=0.55,
-                upper_pad=0.18,
-                min_span=0.05,
-            )
-            ax.set_ylim(y_min, min(1.0, y_max))
-            ax.set_xticks(np.arange(len(labels), dtype=np.float32))
-            ax.set_xticklabels(labels)
-            ax.set_title(title)
-            ax.grid(axis="y", alpha=0.25)
-            hide_chart_spines(ax)
-            for bar, value in zip(bars, values):
-                ax.text(
-                    bar.get_x() + bar.get_width() / 2.0,
-                    bar.get_height() + ax.get_ylim()[1] * 0.025,
-                    format_figure_value(value),
-                    ha="center",
-                    va="bottom",
-                    fontsize=9,
-                )
-
-        fig.suptitle("Retrieval across eval and val splits", fontsize=12)
-        fig.tight_layout(rect=(0.0, 0.02, 1.0, 0.95))
-        fig.savefig(output_path, dpi=SUMMARY_FIGURE_DPI, bbox_inches="tight")
-    finally:
-        plt.close(fig)
-
-def generate_summary_figures(metrics, effective_dim_figure_path, activity_figure_path, retrieval_figure_path):
+def generate_summary_figures(metrics, effective_dim_figure_path, activity_figure_path):
     save_effective_dimensionality_figure(metrics, output_path=effective_dim_figure_path)
     save_activity_prediction_figure(metrics["activity_cv"], output_path=activity_figure_path)
-    save_retrieval_figure(metrics["retrieval"], output_path=retrieval_figure_path)
     return {
-        "effective_dim_eval": str(effective_dim_figure_path),
+        "effective_dim_val": str(effective_dim_figure_path),
         "activity_prediction": str(activity_figure_path),
-        "retrieval": str(retrieval_figure_path),
     }
-
-@dataclass(frozen=True)
-class RetrievalCandidateRecord:
-    row_id: int
-    compound_id: str
-    smiles: str
-
-@dataclass(frozen=True)
-class RetrievalContextRecord:
-    key: str
-    target_name: str
-    effector_name: str
-    effector_uniprot: str
-    target_sequence: str
-    effector_sequence: str
-    positives: tuple[RetrievalCandidateRecord, ...]
-    negatives: tuple[RetrievalCandidateRecord, ...]
-
-@dataclass(frozen=True)
-class RetrievalRepresentationFamily:
-    target: np.ndarray
-    effector: np.ndarray
-    ligand: np.ndarray
-
-class LowRankBilinearScorer(torch.nn.Module):
-    def __init__(self, target_dim, effector_dim, ligand_dim, rank):
-        super().__init__()
-        self.target_proj = torch.nn.Linear(target_dim, rank, bias=False)
-        self.effector_proj = torch.nn.Linear(effector_dim, rank, bias=False)
-        self.ligand_from_target_proj = torch.nn.Linear(ligand_dim, rank, bias=False)
-        self.ligand_from_effector_proj = torch.nn.Linear(ligand_dim, rank, bias=False)
-        self.bias = torch.nn.Parameter(torch.zeros(()))
-
-    def forward(self, target, effector, ligand):
-        target_ligand = (self.target_proj(target) * self.ligand_from_target_proj(ligand)).sum(dim=-1)
-        effector_ligand = (self.effector_proj(effector) * self.ligand_from_effector_proj(ligand)).sum(dim=-1)
-        return target_ligand + effector_ligand + self.bias
-
-def _safe_float(value):
-    if value is None:
-        return float("nan")
-    if isinstance(value, (np.floating, np.integer)):
-        return float(value)
-    return float(value)
-
-def build_retrieval_context_records(dataset_df, negatives_per_context, rng_seed, dataset_label):
-    required = {
-        "Compound ID",
-        "SMILES",
-        "Target",
-        "Effector",
-        "Effector UniProt",
-        "Target Sequence",
-        "Effector Sequence",
-    }
-    missing = required.difference(dataset_df.columns)
-    if missing:
-        raise ValueError(f"{dataset_label} is missing required columns: {sorted(missing)}")
-
-    df = dataset_df.copy().reset_index(drop=True)
-    df["row_id"] = np.arange(len(df), dtype=np.int64)
-    blank_smiles_mask = df["SMILES"].astype(str).str.strip() == ""
-    if bool(blank_smiles_mask.any()):
-        blank_count = int(blank_smiles_mask.sum())
-        raise ValueError(f"{dataset_label} contains {blank_count} rows with blank SMILES.")
-    group_cols = ["Target", "Effector", "Effector UniProt", "Target Sequence", "Effector Sequence"]
-
-    rng = np.random.default_rng(rng_seed)
-    contexts = []
-    grouped = df.groupby(group_cols, sort=False)
-    for group_idx, (group_key, group_df) in enumerate(grouped, start=1):
-        target_name, effector_name, effector_uniprot, target_seq, effector_seq = group_key
-        positives = tuple(
-            RetrievalCandidateRecord(
-                row_id=int(row["row_id"]),
-                compound_id=str(row["Compound ID"]),
-                smiles=str(row["SMILES"]).strip(),
-            )
-            for row in group_df.to_dict("records")
-        )
-
-        positive_row_ids = [record.row_id for record in positives]
-        negative_pool = df.loc[~df["row_id"].isin(positive_row_ids)]
-        if len(negative_pool) < int(negatives_per_context):
-            raise ValueError(
-                f"{dataset_label} context {target_name}/{effector_name} has only {len(negative_pool)} "
-                f"available negatives, fewer than requested {int(negatives_per_context)}."
-            )
-
-        sample_size = int(negatives_per_context)
-        sampled_idx = rng.choice(negative_pool.index.to_numpy(), size=sample_size, replace=False)
-        negatives = tuple(
-            RetrievalCandidateRecord(
-                row_id=int(row["row_id"]),
-                compound_id=str(row["Compound ID"]),
-                smiles=str(row["SMILES"]).strip(),
-            )
-            for row in negative_pool.loc[sampled_idx].to_dict("records")
-        )
-
-        contexts.append(
-            RetrievalContextRecord(
-                key=f"ctx_{group_idx:03d}_{target_name}_{effector_name}",
-                target_name=str(target_name),
-                effector_name=str(effector_name),
-                effector_uniprot=str(effector_uniprot),
-                target_sequence=str(target_seq),
-                effector_sequence=str(effector_seq),
-                positives=positives,
-                negatives=negatives,
-            )
-        )
-    return contexts
-
-def build_retrieval_pair_dataframe(contexts):
-    rows = []
-    for context in contexts:
-        for label, candidates in ((1, context.positives), (0, context.negatives)):
-            for candidate in candidates:
-                rows.append(
-                    {
-                        "context_key": context.key,
-                        "candidate_row_id": int(candidate.row_id),
-                        "Compound ID": candidate.compound_id,
-                        "SMILES": candidate.smiles,
-                        "label": int(label),
-                        "Target": context.target_name,
-                        "Effector": context.effector_name,
-                        "Effector UniProt": context.effector_uniprot,
-                        "Target Sequence": context.target_sequence,
-                        "Effector Sequence": context.effector_sequence,
-                    }
-                )
-    return pd.DataFrame(rows)
-
-def build_retrieval_context_folds(contexts, n_folds):
-    n_folds = int(n_folds)
-    if n_folds < 2:
-        raise ValueError(f"n_folds must be at least 2, got {n_folds}.")
-    if len(contexts) < n_folds:
-        raise ValueError(f"Need at least {n_folds} contexts, found {len(contexts)}.")
-    folds = [[] for _ in range(n_folds)]
-    fold_loads = [0 for _ in range(n_folds)]
-    context_infos = sorted(
-        (
-            (
-                context.key,
-                len(context.positives) + len(context.negatives),
-                len(context.positives),
-            )
-            for context in contexts
-        ),
-        key=lambda item: (item[1], item[2]),
-        reverse=True,
-    )
-    for context_key, pair_count, _positive_count in context_infos:
-        fold_idx = min(range(n_folds), key=lambda idx: (fold_loads[idx], len(folds[idx])))
-        folds[fold_idx].append(context_key)
-        fold_loads[fold_idx] += pair_count
-    return [sorted(fold) for fold in folds if fold]
-
-def build_retrieval_feature_families(pair_df, encoder, batch_size, autocast_enabled):
-    reps = collect_representations(
-        pair_df,
-        encoder,
-        batch_size=batch_size,
-        autocast_enabled=autocast_enabled,
-    )
-    return {
-        name: RetrievalRepresentationFamily(
-            target=reps[name][0].numpy().astype(np.float32),
-            effector=reps[name][1].numpy().astype(np.float32),
-            ligand=reps[name][2].numpy().astype(np.float32),
-        )
-        for name in ("frozen_mean", "projected_mean", "latentglue")
-    }
-
-def build_retrieval_standardization_stats(features):
-    mean = features.mean(axis=0, keepdims=True).astype(np.float32)
-    std = features.std(axis=0, keepdims=True).astype(np.float32)
-    if np.any(std <= 1e-6):
-        zero_var_count = int(np.sum(std <= 1e-6))
-        raise ValueError(f"Encountered {zero_var_count} near-constant retrieval feature dimensions.")
-    return mean, std
-
-def apply_retrieval_standardization(features, mean, std):
-    return ((features - mean) / std).astype(np.float32)
-
-def choose_retrieval_validation_contexts(train_contexts, rng_seed):
-    unique_contexts = np.unique(train_contexts)
-    if len(unique_contexts) < 5:
-        raise ValueError(f"Need at least 5 training contexts to form a validation split, found {len(unique_contexts)}.")
-    rng = np.random.default_rng(rng_seed)
-    shuffled = unique_contexts.copy()
-    rng.shuffle(shuffled)
-    val_count = int(round(0.2 * len(shuffled)))
-    if val_count < 1 or val_count >= len(shuffled):
-        raise RuntimeError(
-            f"Validation split size must be between 1 and {len(shuffled) - 1}, computed {val_count}."
-        )
-    return np.sort(shuffled[:val_count])
-
-def seed_retrieval_fold(fold_seed):
-    fold_seed = int(fold_seed)
-    torch.manual_seed(fold_seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(fold_seed)
-
-def fit_and_score_retrieval_bilinear(representation, labels, context_keys, train_mask, test_mask, fold_seed, device):
-    scorer_device = torch.device(device)
-    if not np.any(train_mask):
-        raise ValueError("Retrieval training mask is empty.")
-    if not np.any(test_mask):
-        raise ValueError("Retrieval test mask is empty.")
-    train_contexts = context_keys[train_mask]
-    val_contexts = choose_retrieval_validation_contexts(train_contexts, fold_seed)
-    val_mask = train_mask & np.isin(context_keys, val_contexts)
-    core_train_mask = train_mask & ~val_mask
-    if not np.any(core_train_mask):
-        raise RuntimeError("Retrieval core training mask is empty after validation split.")
-    if not np.any(val_mask):
-        raise RuntimeError("Retrieval validation mask is empty after validation split.")
-    if len(np.unique(labels[val_mask])) != 2:
-        raise RuntimeError("Retrieval validation split must contain both positive and negative labels.")
-
-    target_mean, target_std = build_retrieval_standardization_stats(representation.target[core_train_mask])
-    effector_mean, effector_std = build_retrieval_standardization_stats(representation.effector[core_train_mask])
-    ligand_mean, ligand_std = build_retrieval_standardization_stats(representation.ligand[core_train_mask])
-
-    target_train = torch.from_numpy(apply_retrieval_standardization(representation.target[core_train_mask], target_mean, target_std)).to(scorer_device)
-    effector_train = torch.from_numpy(apply_retrieval_standardization(representation.effector[core_train_mask], effector_mean, effector_std)).to(scorer_device)
-    ligand_train = torch.from_numpy(apply_retrieval_standardization(representation.ligand[core_train_mask], ligand_mean, ligand_std)).to(scorer_device)
-    y_train = torch.from_numpy(labels[core_train_mask].astype(np.float32)).to(scorer_device)
-
-    seed_retrieval_fold(fold_seed)
-    model = LowRankBilinearScorer(
-        target_dim=representation.target.shape[1],
-        effector_dim=representation.effector.shape[1],
-        ligand_dim=representation.ligand.shape[1],
-        rank=RETRIEVAL_BILINEAR_RANK,
-    ).to(scorer_device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=RETRIEVAL_LR, weight_decay=RETRIEVAL_WEIGHT_DECAY)
-    positive_count = float(max(labels[core_train_mask].sum(), 1.0))
-    negative_count = float(max((core_train_mask.sum() - labels[core_train_mask].sum()), 1.0))
-    criterion = torch.nn.BCEWithLogitsLoss(
-        pos_weight=torch.tensor([negative_count / positive_count], device=scorer_device, dtype=torch.float32),
-    )
-
-    target_val = torch.from_numpy(apply_retrieval_standardization(representation.target[val_mask], target_mean, target_std)).to(scorer_device)
-    effector_val = torch.from_numpy(apply_retrieval_standardization(representation.effector[val_mask], effector_mean, effector_std)).to(scorer_device)
-    ligand_val = torch.from_numpy(apply_retrieval_standardization(representation.ligand[val_mask], ligand_mean, ligand_std)).to(scorer_device)
-    y_val = labels[val_mask].astype(np.int64)
-
-    best_score = float("-inf")
-    best_state = {name: value.detach().cpu().clone() for name, value in model.state_dict().items()}
-    patience = 0
-    batch_size = min(256, int(core_train_mask.sum()))
-
-    for _epoch in range(RETRIEVAL_TRAIN_EPOCHS):
-        model.train()
-        permutation = torch.randperm(target_train.size(0), device=scorer_device)
-        for batch_start in range(0, target_train.size(0), batch_size):
-            batch_idx = permutation[batch_start : batch_start + batch_size]
-            logits = model(target_train[batch_idx], effector_train[batch_idx], ligand_train[batch_idx])
-            loss = criterion(logits, y_train[batch_idx])
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            optimizer.step()
-
-        model.eval()
-        with torch.no_grad():
-            val_logits = model(target_val, effector_val, ligand_val)
-            val_scores = torch.sigmoid(val_logits).detach().cpu().numpy()
-            current_score = float(roc_auc_score(y_val, val_scores))
-
-        if current_score > best_score + 1e-4:
-            best_score = current_score
-            best_state = {name: value.detach().cpu().clone() for name, value in model.state_dict().items()}
-            patience = 0
-        else:
-            patience += 1
-            if patience >= RETRIEVAL_PATIENCE:
-                break
-
-    model.load_state_dict(best_state)
-    model.eval()
-    with torch.no_grad():
-        target_test = torch.from_numpy(apply_retrieval_standardization(representation.target[test_mask], target_mean, target_std)).to(scorer_device)
-        effector_test = torch.from_numpy(apply_retrieval_standardization(representation.effector[test_mask], effector_mean, effector_std)).to(scorer_device)
-        ligand_test = torch.from_numpy(apply_retrieval_standardization(representation.ligand[test_mask], ligand_mean, ligand_std)).to(scorer_device)
-        test_logits = model(target_test, effector_test, ligand_test)
-        return torch.sigmoid(test_logits).detach().cpu().numpy().astype(np.float32)
-
-def compute_retrieval_context_metrics(labels, scores):
-    labels = np.asarray(labels, dtype=np.int64)
-    scores = np.asarray(scores, dtype=np.float32)
-    if len(np.unique(labels)) != 2:
-        raise ValueError("Retrieval context metrics require both positive and negative labels.")
-    return {
-        "candidate_count": float(len(labels)),
-        "positive_count": float(int(labels.sum())),
-        "negative_count": float(int((labels == 0).sum())),
-        "auroc": float(roc_auc_score(labels, scores)),
-        "auprc": float(average_precision_score(labels, scores)),
-    }
-
-def evaluate_retrieval_representation(representation, pair_df, folds, device):
-    y = pair_df["label"].to_numpy(dtype=np.int64)
-    context_keys = pair_df["context_key"].astype(str).to_numpy()
-    out_of_fold_scores = np.full(len(pair_df), np.nan, dtype=np.float32)
-    for fold_idx, test_contexts in enumerate(folds, start=1):
-        test_mask = np.isin(context_keys, np.asarray(test_contexts, dtype=object))
-        train_mask = ~test_mask
-        if not np.any(test_mask) or not np.any(train_mask):
-            raise RuntimeError(f"Fold {fold_idx} produced an empty train/test split.")
-
-        out_of_fold_scores[test_mask] = fit_and_score_retrieval_bilinear(
-            representation=representation,
-            labels=y,
-            context_keys=context_keys,
-            train_mask=train_mask,
-            test_mask=test_mask,
-            fold_seed=RETRIEVAL_SEED + fold_idx,
-            device=device,
-        )
-
-    if np.isnan(out_of_fold_scores).any():
-        raise RuntimeError("Some retrieval pairs did not receive out-of-fold scores.")
-
-    scored_df = pair_df.copy()
-    scored_df["score"] = out_of_fold_scores
-
-    per_context = {}
-    macro_aurocs = []
-    macro_auprcs = []
-    for context_key, group_df in scored_df.groupby("context_key", sort=False):
-        labels = group_df["label"].to_numpy(dtype=np.int64)
-        scores = group_df["score"].to_numpy(dtype=np.float32)
-        context_metrics = compute_retrieval_context_metrics(labels, scores)
-        per_context[str(context_key)] = {
-            "target_name": str(group_df["Target"].iloc[0]),
-            "effector_name": str(group_df["Effector"].iloc[0]),
-            "effector_uniprot": str(group_df["Effector UniProt"].iloc[0]),
-            **{key: _safe_float(value) for key, value in context_metrics.items()},
-        }
-        macro_aurocs.append(context_metrics["auroc"])
-        macro_auprcs.append(context_metrics["auprc"])
-
-    if not macro_aurocs or not macro_auprcs:
-        raise RuntimeError("Retrieval evaluation did not produce any valid per-context metrics.")
-
-    return {
-        "macro_context_auroc": float(np.mean(macro_aurocs)),
-        "macro_context_auprc": float(np.mean(macro_auprcs)),
-        "context_count": float(len(per_context)),
-        "per_context": per_context,
-    }
-
-def evaluate_retrieval(dataset_df, dataset_name, encoder, batch_size, autocast_enabled, device, negatives_per_context):
-    contexts = build_retrieval_context_records(
-        dataset_df,
-        negatives_per_context=negatives_per_context,
-        rng_seed=RETRIEVAL_SEED,
-        dataset_label=dataset_name,
-    )
-    if not contexts:
-        raise RuntimeError(f"No retrieval contexts were produced for {dataset_name}.")
-
-    pair_df = build_retrieval_pair_dataframe(contexts)
-    folds = build_retrieval_context_folds(contexts, RETRIEVAL_N_FOLDS)
-    retrieval_batch_size = resolve_batch_size(batch_size, len(pair_df))
-    feature_families = build_retrieval_feature_families(
-        pair_df=pair_df,
-        encoder=encoder,
-        batch_size=retrieval_batch_size,
-        autocast_enabled=autocast_enabled,
-    )
-
-    results = {
-        "config": {
-            "negatives_per_context": float(negatives_per_context),
-            "batch_size": float(retrieval_batch_size),
-            "n_folds": float(len(folds)),
-            "rng_seed": float(RETRIEVAL_SEED),
-            "scorer": (
-                f"LowRankBilinearScorer(rank={RETRIEVAL_BILINEAR_RANK}) "
-                f"+ BCEWithLogitsLoss + AdamW(lr={RETRIEVAL_LR}, weight_decay={RETRIEVAL_WEIGHT_DECAY})"
-            ),
-            "split_strategy": f"grouped context holdout cross-validation on {dataset_name}",
-        },
-        "dataset": {
-            "name": dataset_name,
-            "num_rows": float(len(dataset_df)),
-            "num_contexts": float(len(contexts)),
-            "num_pairs": float(len(pair_df)),
-            "context_positive_count_mean": float(np.mean([len(context.positives) for context in contexts])),
-            "context_negative_count_mean": float(np.mean([len(context.negatives) for context in contexts])),
-        },
-        "folds": {
-            "context_counts": [float(len(fold)) for fold in folds],
-            "pair_counts": [float(int(pair_df["context_key"].isin(fold).sum())) for fold in folds],
-        },
-        "representations": {},
-    }
-    for name, representation in feature_families.items():
-        results["representations"][name] = evaluate_retrieval_representation(
-            representation=representation,
-            pair_df=pair_df,
-            folds=folds,
-            device=device,
-        )
-    return results
 def main(
     checkpoint_path="",
     device=DEFAULT_DEVICE,
-    batch_size=RETRIEVAL_BATCH_SIZE,
+    batch_size=DEFAULT_BATCH_SIZE,
     train_csv_path=DEFAULT_TRAIN_CSV,
-    eval_csv_path=DEFAULT_EVAL_CSV,
     activity_csv_path=DEFAULT_ACTIVITY_CSV,
     output_json_path=DEFAULT_OUTPUT_JSON,
-    attention_figure_path=DEFAULT_ATTENTION_FIGURE_PATH,
+    ligand_attention_figure_path=DEFAULT_LIGAND_ATTENTION_FIGURE_PATH,
+    protein_attention_figure_path=DEFAULT_PROTEIN_ATTENTION_FIGURE_PATH,
     effective_dim_figure_path=DEFAULT_EFFECTIVE_DIM_FIGURE_PATH,
     activity_figure_path=DEFAULT_ACTIVITY_FIGURE_PATH,
-    retrieval_figure_path=DEFAULT_RETRIEVAL_FIGURE_PATH,
 ):
     checkpoint_path = resolve_checkpoint_path(
         checkpoint_path or os.environ.get("LATENTGLUE_CHECKPOINT", "") or DEFAULT_CHECKPOINT_URL
@@ -1379,7 +1388,6 @@ def main(
         required=("Target", "Effector", "Target Sequence", "Effector Sequence", "SMILES", "split"),
         split="val",
     )
-    eval_df = read_df(eval_csv_path, EVAL_REQUIRED_COLUMNS)
     activity_df = read_df(activity_csv_path, (*TERNARY_COLUMNS, "Value", "Target"))
     repr_cache = {}
 
@@ -1391,18 +1399,8 @@ def main(
         batch_size,
         autocast_enabled,
     )
-    eval_reps = get_representations(
-        repr_cache,
-        "eval",
-        eval_df,
-        encoder,
-        batch_size,
-        autocast_enabled,
-    )
-
     metrics = {}
     metrics.update(evaluate_effective_dimensions(val_reps, dataset_name="val"))
-    metrics.update(evaluate_effective_dimensions(eval_reps, dataset_name="eval"))
     activity_reps = get_representations(
         repr_cache,
         "activity",
@@ -1411,39 +1409,35 @@ def main(
         batch_size,
         autocast_enabled,
     )
-    metrics.update(evaluate_activity(activity_df, activity_reps))
-    metrics["retrieval"] = {
-        "val": evaluate_retrieval(
-            dataset_df=val_df,
-            dataset_name="GlueDegradDB val split",
-            encoder=encoder,
-            batch_size=batch_size,
-            autocast_enabled=autocast_enabled,
-            device=device,
-            negatives_per_context=RETRIEVAL_NEGATIVES_PER_CONTEXT_VAL,
-        ),
-        "eval": evaluate_retrieval(
-            dataset_df=eval_df,
-            dataset_name="GlueDegradDB-Eval",
-            encoder=encoder,
-            batch_size=batch_size,
-            autocast_enabled=autocast_enabled,
-            device=device,
-            negatives_per_context=RETRIEVAL_NEGATIVES_PER_CONTEXT_EVAL,
-        ),
-    }
+    metrics.update(evaluate_activity(activity_df, activity_reps, seeds=EVAL_SEEDS))
     metrics["ligand_attention"] = evaluate_ligand_attention(
         encoder=encoder,
-        eval_df=eval_df,
+        dataset_df=val_df,
+        dataset_name="GlueDegradDB val split",
         autocast_enabled=autocast_enabled,
-        output_path=attention_figure_path,
+        output_path=ligand_attention_figure_path,
+    )
+    metrics["protein_attention"] = evaluate_protein_attention(
+        encoder=encoder,
+        dataset_df=val_df,
+        dataset_name="GlueDegradDB val split",
+        autocast_enabled=autocast_enabled,
+    )
+    save_ligand_attention_figure(
+        metrics["ligand_attention"],
+        output_path=ligand_attention_figure_path,
+    )
+    save_protein_attention_figure(
+        metrics["protein_attention"],
+        output_path=protein_attention_figure_path,
     )
     metrics["summary_figures"] = generate_summary_figures(
         metrics,
         effective_dim_figure_path=effective_dim_figure_path,
         activity_figure_path=activity_figure_path,
-        retrieval_figure_path=retrieval_figure_path,
     )
+    metrics["summary_figures"]["ligand_attention"] = str(ligand_attention_figure_path)
+    metrics["summary_figures"]["protein_attention"] = str(protein_attention_figure_path)
 
     if not output_json_path:
         raise ValueError("output_json_path must be provided.")

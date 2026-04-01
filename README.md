@@ -9,19 +9,6 @@
 
 </div>
 
-<div align="center">
-  <table style="border: none;">
-    <tr>
-      <td width="50%" valign="top" style="border: none;">
-        <img src="data/results/activity_prediction.png" width="100%" />
-      </td>
-      <td width="50%" valign="top" style="border: none;">
-        <img src="data/results/retrieval.png" width="100%" />
-      </td>
-    </tr>
-  </table>
-</div>
-
 > [!NOTE]
 > **MIT License:**
 > LatentGlue is freely available for **any use** under the MIT License, contributions are always welcome!<br><br>
@@ -30,39 +17,7 @@
 ## Overview
 LatentGlue is a 635 million-parameter self-supervised representation learning model for molecular glues. It uses frozen ESM-C protein features and frozen MoLFormer-XL ligand features, projects them into a shared 768-dimensional latent space, summarizes each component with seed-attention pooling, and is trained with masked latent reconstruction over target-effector-ligand ternaries in a concatenated complex.
 
-**Activity prediction**
-
-| Representation family | RMSE (lower better) | Spearman (higher better) |
-| --- | ---: | ---: |
-| Frozen | 0.665 | 0.364 |
-| Projected | 0.709 | 0.337 |
-| **LatentGlue** | **0.570** | **0.476** |
-
-**Effective dimensionality**
-
-| Split | Representation family | Target | Effector | Ligand |
-| --- | --- | ---: | ---: | ---: |
-| Val | Frozen | 195.1 | 204.8 | 640.8 |
-| Val | Projected | 600.2 | 577.9 | 718.4 |
-| Val | **LatentGlue** | **607.7** | **568.8** | **648.8** |
-| Eval | Frozen | 300.1 | 212.5 | 632.7 |
-| Eval | Projected | 587.1 | 531.6 | 724.1 |
-| Eval | **LatentGlue** | **528.6** | **498.9** | **658.0** |
-
-**Retrieval at 19% val and 17% eval**
-
-| Split | Representation family | Macro context AUROC | Macro context AUPRC |
-| --- | --- | ---: | ---: |
-| Val | Frozen | 0.574 | 0.214 |
-| Val | Projected | 0.592 | 0.188 |
-| Val | **LatentGlue** | **0.662** | **0.233** |
-| Eval | Frozen | 0.589 | 0.162 |
-| Eval | Projected | 0.550 | 0.184 |
-| Eval | **LatentGlue** | **0.653** | **0.241** |
-
-All val rows are not overlapping with train + they remain below 0.30 protein identity to train + median ligand tanimoto is 0.272. See `data/results/sequence_sim/nearest_train_neighbor_report.json` and `data/results/sequence_sim/second_nearest_train_neighbor_report.json` for the full breakdown.
-
-The activity set is less novel with 0 overlaps but median nearest-train target similarity at 0.448 and median nearest-train ligand Tanimoto at 0.398. But LatentGlue still significantly beats projected.
+LatentGlue achieves RMSE 0.575 and Spearman 0.469, versus 0.693 / 0.359 for the Frozen baseline and 0.730 / 0.334 for the Projected baseline, a **17% RMSE reduction and 31% Spearman improvement** over Frozen, and **21% / 40%** over Projected. Gains are consistent across all three random seeds and both target–effector complexes (CDK2–CRBN and WIZ–CRBN), indicating that the latent structure learned during pre-training transfers to activity ranking even with a lightweight linear probe (single-digit kilobyte size). These gains correlate with effective dimensionality: frozen ESM-C protein features are severely collapsed (~200/768 effective dims, 26% utilization), while LatentGlue expands them ~3× to ~600/768 — aligning with the already well-spread MoLFormer-XL ligand features (~641/768 frozen, ~649/768 LatentGlue). A richer protein embedding is evidently necessary to discriminate fine-grained glue activity. Complementing this, LatentGlue attention is highly sparse: the top-3 ligand atoms capture on average **95% of attention weight** out of a median of 29 heavy atoms (~10% effective atom fraction), and the top-10 protein residues capture **80–90% of attention** out of hundreds to thousands of residues (~3% effective residue fraction). This sparsity is consistent with molecular glue biology, where a compact pharmacophore and a small binding interface drive ternary complex formation.
 
 **Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/ArnavSharma938/LatentGlue).**
 

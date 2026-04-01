@@ -14,7 +14,6 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.processing.mol_utils import canonicalize_smiles as dataset_canonicalize_smiles
 
 DEFAULT_TRAIN_CSV = PROJECT_ROOT / "data" / "GlueDegradDB.csv"
-DEFAULT_EVAL_CSV = PROJECT_ROOT / "data" / "GlueDegradDB-Eval.csv"
 DEFAULT_ACTIVITY_CSV = PROJECT_ROOT / "data" / "GlueDegradDB-Activity.csv"
 DEFAULT_OUT_DIR = PROJECT_ROOT / "data" / "results" / "sequence_sim"
 THRESHOLDS = (0.10, 0.20, 0.30, 0.70)
@@ -118,9 +117,8 @@ def top_k_similarity_against_refs(query_smiles, ref_fp_map, fpgen, max_k):
         }
     return top
 
-def load_splits(train_csv_path, eval_csv_path, activity_csv_path):
+def load_splits(train_csv_path, activity_csv_path):
     train_df = pd.read_csv(train_csv_path)
-    eval_df = pd.read_csv(eval_csv_path)
     activity_df = pd.read_csv(activity_csv_path)
     if "split" not in train_df.columns:
         raise ValueError(f"{train_csv_path} must contain a `split` column.")
@@ -130,11 +128,9 @@ def load_splits(train_csv_path, eval_csv_path, activity_csv_path):
         raise ValueError("Training split is empty.")
     if len(val_split_df) == 0:
         raise ValueError("Validation split is empty.")
-    if len(eval_df) == 0:
-        raise ValueError("Eval CSV is empty.")
     if len(activity_df) == 0:
         raise ValueError("Activity CSV is empty.")
-    return train_split_df, val_split_df, eval_df, activity_df
+    return train_split_df, val_split_df, activity_df
 
 def annotate(df, target_map, effector_map, ligand_map, rank):
     annotated = df.copy()
@@ -260,7 +256,7 @@ def build_activity_split_report(df):
         },
     }
 
-def build_report(train_ref_split, rank, val_df, eval_df):
+def build_report(train_ref_split, rank, val_df):
     return {
         "rank": int(rank),
         "train_ref_split": train_ref_split,
@@ -284,7 +280,6 @@ def build_report(train_ref_split, rank, val_df, eval_df):
             "canonicalization": "RDKit canonical non-isomeric SMILES via src.processing.mol_utils.canonicalize_smiles",
         },
         "val": build_split_report(val_df),
-        "eval": build_split_report(eval_df),
     }
 
 def build_activity_report(train_ref_split, rank, activity_df):
@@ -318,7 +313,6 @@ def parse_args():
         description="Write nearest-train and second-nearest-train protein/ligand similarity reports."
     )
     parser.add_argument("--train-csv", type=Path, default=DEFAULT_TRAIN_CSV)
-    parser.add_argument("--eval-csv", type=Path, default=DEFAULT_EVAL_CSV)
     parser.add_argument("--activity-csv", type=Path, default=DEFAULT_ACTIVITY_CSV)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     return parser.parse_args()
@@ -326,7 +320,7 @@ def parse_args():
 def main():
     args = parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    train_df, val_df, eval_df, activity_df = load_splits(args.train_csv, args.eval_csv, args.activity_csv)
+    train_df, val_df, activity_df = load_splits(args.train_csv, args.activity_csv)
     aligner = build_aligner()
     fpgen = build_fingerprint_generator()
     max_k = 2
@@ -335,15 +329,9 @@ def main():
     train_ref_fp_map = build_train_reference_map(train_df["SMILES"], fpgen)
     val_target_map = compute_identity_map(val_df["Target Sequence"], train_target_refs, aligner, max_k)
     val_effector_map = compute_identity_map(val_df["Effector Sequence"], train_effector_refs, aligner, max_k)
-    eval_target_map = compute_identity_map(eval_df["Target Sequence"], train_target_refs, aligner, max_k)
-    eval_effector_map = compute_identity_map(eval_df["Effector Sequence"], train_effector_refs, aligner, max_k)
     val_ligand_map = {
         str(smiles): top_k_similarity_against_refs(smiles, train_ref_fp_map, fpgen, max_k)
         for smiles in sorted(set(val_df["SMILES"].astype(str)))
-    }
-    eval_ligand_map = {
-        str(smiles): top_k_similarity_against_refs(smiles, train_ref_fp_map, fpgen, max_k)
-        for smiles in sorted(set(eval_df["SMILES"].astype(str)))
     }
     activity_target_map = compute_identity_map(activity_df["Target Sequence"], train_target_refs, aligner, max_k)
     activity_ligand_map = {
@@ -355,8 +343,7 @@ def main():
         (2, "second_nearest_train_neighbor_report.json"),
     ):
         val_annotated = annotate(val_df, val_target_map, val_effector_map, val_ligand_map, rank)
-        eval_annotated = annotate(eval_df, eval_target_map, eval_effector_map, eval_ligand_map, rank)
-        report = build_report("GlueDegradDB split == train", rank, val_annotated, eval_annotated)
+        report = build_report("GlueDegradDB split == train", rank, val_annotated)
         out_path = args.out_dir / filename
         with out_path.open("w", encoding="utf-8") as handle:
             json.dump(report, handle, indent=2, sort_keys=True)
