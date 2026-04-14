@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 
-DEFAULT_CHECKPOINT_REPO_ID = "ArnavSharma938/LatentGlue"
+DEFAULT_CHECKPOINT_REPO_ID = "AnonPeerRev/LatentGlue"
 
 def main():
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

@@ -2,10 +2,10 @@
 
 <div align="center">
 
-[![Training Set](https://img.shields.io/badge/HuggingFace-Training%20Set-C2410C?style=flat)](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB)
-[![Activity Set](https://img.shields.io/badge/HuggingFace-Activity%20Set-B45309?style=flat)](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Activity)
+[![Training Set](https://img.shields.io/badge/HuggingFace-Training%20Set-C2410C?style=flat)](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB)
+[![Activity Set](https://img.shields.io/badge/HuggingFace-Activity%20Set-B45309?style=flat)](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB-Activity)
 [![Open License](https://img.shields.io/badge/Open%20License-MIT-7F1D1D?style=flat)](LICENSE)
-[![Open Weights](https://img.shields.io/badge/HuggingFace-Open%20Weights-4338CA?style=flat)](https://huggingface.co/ArnavSharma938/LatentGlue)
+[![Open Weights](https://img.shields.io/badge/HuggingFace-Open%20Weights-4338CA?style=flat)](https://huggingface.co/AnonPeerRev/LatentGlue)
 
 </div>
 
@@ -19,7 +19,7 @@ LatentGlue is a self-supervised representation learning model for molecular glue
 
 LatentGlue achieves RMSE 0.575 and Spearman 0.469, versus 0.693 / 0.359 for the Frozen baseline and 0.730 / 0.334 for the Projected baseline, a **17% RMSE reduction and 31% Spearman improvement** over Frozen, and **21% / 40%** over Projected. Gains are consistent across all three random seeds and both target–effector complexes (CDK2–CRBN and WIZ–CRBN), and hold under genuine distribution shift: activity-set ligands have mean Tanimoto 0.45 to train for CDK2 and only 0.33 for WIZ, while WIZ itself has just 14% sequence identity to the nearest training protein, yet LatentGlue still outperforms baselines on both, indicating that the latent structure learned during pre-training transfers across scaffold and protein-family boundaries, not just memorized chemistry. These gains correlate with effective dimensionality: frozen ESM-C protein features are severely collapsed (~200/768 effective dims, 26% utilization), while LatentGlue expands them ~3× to ~600/768 — aligning with the already well-spread MoLFormer-XL ligand features (~641/768 frozen, ~649/768 LatentGlue). A richer protein embedding is evidently necessary to discriminate fine-grained glue activity. Complementing this, LatentGlue attention is highly sparse: the top-3 ligand atoms capture on average **95% of attention weight** out of a median of 29 heavy atoms (~10% effective atom fraction), and the top-10 protein residues capture **80–90% of attention** out of hundreds to thousands of residues (~3% effective residue fraction). This sparsity is consistent with molecular glue biology, where a compact pharmacophore and a small binding interface drive ternary complex formation.
 
-**Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/ArnavSharma938/LatentGlue).**
+**Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/AnonPeerRev/LatentGlue).**
 
 ## Case Study
 
@@ -31,7 +31,7 @@ The case study applies LatentGlue to large-scale molecular glue screening, with 
 High-ranked ligands have extremely strong chemistry fundamentals with major failures requiring minor chemistry edits.
 
 ## Data
-Available datasets include **[GlueDegradDB](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB)**, the training dataset; **[GlueDegradDB-Eval](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Eval)**, an evaluation set (separate from the validation split within GlueDegradDB, which has no component overlap); **[GlueDegradDB-Activity](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Activity)**, degradation profiles; and **[GlueDegradDB-Filter](https://huggingface.co/datasets/ArnavSharma938/GlueDegradDB-Filter)**, a 35M-molecule molecular glue degrader candidate set.
+Available datasets include **[GlueDegradDB](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB)**, the training dataset; **[GlueDegradDB-Eval](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB-Eval)**, an evaluation set (separate from the validation split within GlueDegradDB, which has no component overlap); **[GlueDegradDB-Activity](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB-Activity)**, degradation profiles; and **[GlueDegradDB-Filter](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB-Filter)**, a 35M-molecule molecular glue degrader candidate set.
 
 ## Setup
 Clone the repository

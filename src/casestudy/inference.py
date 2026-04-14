@@ -29,9 +29,9 @@ from src.validation.full_eval import (
 )
 
 DEFAULT_DEVICE = "cuda"
-DEFAULT_CHECKPOINT_REPO_ID = "ArnavSharma938/LatentGlue"
+DEFAULT_CHECKPOINT_REPO_ID = "AnonPeerRev/LatentGlue"
 DEFAULT_CHECKPOINT_FILENAME = "LatentGlue.pt"
-DEFAULT_SCREENING_DATASET_REPO_ID = "ArnavSharma938/GlueDegradDB-Filter"
+DEFAULT_SCREENING_DATASET_REPO_ID = "AnonPeerRev/GlueDegradDB-Filter"
 DEFAULT_SCREENING_FILENAME = "GlueDegradDB-Filter.csv"
 DEFAULT_SCREENING_LOCAL_CSV = "data/screening/GlueDegradDB-Filter.csv"
 DEFAULT_TRAIN_CSV = "data/GlueDegradDB.csv"
