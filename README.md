@@ -1,4 +1,4 @@
-<h1 align="center">Learning Transferable Representations of Molecular Glues in Latent Space</h1>
+<h1 align="center">Learning to Organize Transferable Representations of Molecular Glues in Latent Space</h1>
 
 <div align="center">
 
@@ -64,7 +64,7 @@ python scripts/run_train.py
 > RDKit can be unstable on certain Linux distributions; accordingly, `scripts/run_processing.py` may fail in those environments. The full outputs from a verified run are provided directly in the `data/` directory and HuggingFace for immediate use.
 
 ## Citation
-If you find this repository useful, please cite it as software while the paper is in peer review:
+If you find this repository useful, please cite it as software:
 
 ```bibtex
 @software{sharma2026latentglue,
