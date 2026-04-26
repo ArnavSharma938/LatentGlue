@@ -17,8 +17,6 @@
 ## Overview
 LatentGlue is a self-supervised representation learning model for molecular glues with 16.28 million trainable parameters on top of frozen ESM-C protein features and frozen MoLFormer-XL ligand features. It projects these frozen backbones into a shared 768-dimensional latent space, summarizes each component with seed-attention pooling, and is trained with masked latent reconstruction over target-effector-ligand ternaries in a concatenated complex.
 
-LatentGlue achieves RMSE 0.575 and Spearman 0.469, versus 0.693 / 0.359 for the Frozen baseline and 0.730 / 0.334 for the Projected baseline, a **17% RMSE reduction and 31% Spearman improvement** over Frozen, and **21% / 40%** over Projected. Gains are consistent across all three random seeds and both target–effector complexes (CDK2–CRBN and WIZ–CRBN), and hold under genuine distribution shift: activity-set ligands have mean Tanimoto 0.45 to train for CDK2 and only 0.33 for WIZ, while WIZ itself has just 14% sequence identity to the nearest training protein, yet LatentGlue still outperforms baselines on both, indicating that the latent structure learned during pre-training transfers across scaffold and protein-family boundaries, not just memorized chemistry. These gains correlate with effective dimensionality: frozen ESM-C protein features are severely collapsed (~200/768 effective dims, 26% utilization), while LatentGlue expands them ~3× to ~600/768 — aligning with the already well-spread MoLFormer-XL ligand features (~641/768 frozen, ~649/768 LatentGlue). A richer protein embedding is evidently necessary to discriminate fine-grained glue activity. Complementing this, LatentGlue attention is highly sparse: the top-3 ligand atoms capture on average **95% of attention weight** out of a median of 29 heavy atoms (~10% effective atom fraction), and the top-10 protein residues capture **80–90% of attention** out of hundreds to thousands of residues (~3% effective residue fraction). This sparsity is consistent with molecular glue biology, where a compact pharmacophore and a small binding interface drive ternary complex formation.
-
 **Training to the released checkpoint (epoch 4) on a 4 vCPU, 32 GB RAM, 1× A100 80GB [Thunder Compute](https://www.thundercompute.com/) instance took under 60 minutes ($0.78). Open weights are available on [HuggingFace](https://huggingface.co/AnonPeerRev/LatentGlue).**
 
 ## Case Study
@@ -69,7 +67,7 @@ If you find this repository useful, please cite it as software:
 ```bibtex
 @software{sharma2026latentglue,
   author = {Sharma, Arnav},
-  title = {Learning Transferable Representations of Molecular Glues in Latent Space},
+  title = {Learning to Organize Transferable Representations of Molecular Glues in Latent Space},
   year = {2026},
   url = {https://github.com/ArnavSharma938/LatentGlue},
 }
