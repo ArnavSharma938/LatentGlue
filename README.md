@@ -21,12 +21,12 @@ LatentGlue is a self-supervised representation learning model for molecular glue
 
 ## Case Study
 
-The case study applies LatentGlue to large-scale molecular glue screening, with the implementation in `src/casestudy/inference.py`. Starting from 104 million commercially accessible compounds from the [Enamine REAL database](https://enamine.net/compound-collections/real-compounds/real-database-subsets), the pipeline first performs chemistry-based filtering to a set of ~35 million compounds and then uses LatentGlue to screen and rank the top 10,000 candidate ligands for the Alpha-synuclein wild-type and KRAS G12D target contexts. This study is more experimental for now as the screening pipeline does not implement hard chemistry filters.
+The case study applies LatentGlue to large-scale molecular glue screening, with the implementation in `src/casestudy/inference.py`. Starting from 104 million commercially accessible compounds from the [Enamine REAL database](https://enamine.net/compound-collections/real-compounds/real-database-subsets), the pipeline first performs chemistry-based filtering to a set of ~35 million compounds and then uses LatentGlue to screen and rank the top 10,000 candidate ligands for the Alpha-synuclein wild-type and KRAS G12D target contexts. 
+
+This study is more experimental (as a case study) for now, as the screening pipeline does not implement hard chemistry filters. Additionally, a screening in which ligands are ranked by predicted DC50 may be more viable for therapeutic development compared to the current centroid similarity-based screening. Additionally, molecular glues are very nuanced therapeutics, so the Enamine REAL 1% subset (the 104M compound set) may be too small.
 
 * **Top Ligand for A-Syn (Rank 2)**: COC(C)C(C)n1cc(COc2cccc(C(=O)NC3CCc4ccccc4NC3=O)c2)nn1
 * **Top Ligand for KRAS G12D (Rank 1)**: CNC(=O)C1CC(O)CN1C(=O)CC(NC(=O)c1csnc1C)c1ccc(-c2ccccc2)cc1
-
-High-ranked ligands have extremely strong chemistry fundamentals with major failures requiring minor chemistry edits.
 
 ## Data
 Available datasets include **[GlueDegradDB](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB)**, the training dataset; **[GlueDegradDB-Eval](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB-Eval)**, an evaluation set (separate from the validation split within GlueDegradDB, which has no component overlap); **[GlueDegradDB-Activity](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB-Activity)**, degradation profiles; and **[GlueDegradDB-Filter](https://huggingface.co/datasets/AnonPeerRev/GlueDegradDB-Filter)**, a 35M-molecule molecular glue degrader candidate set.
